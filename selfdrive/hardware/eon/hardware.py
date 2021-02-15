@@ -314,7 +314,7 @@ class Android(HardwareBase):
 
       return network_strength
 
-    def get_ip_address(self):
+  def get_ip_address(self):
 
     try:
       wlan = subprocess.check_output(["ifconfig", "wlan0"], encoding='utf8').strip()
