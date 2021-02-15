@@ -41,8 +41,9 @@ static void ui_init_vision(UIState *s) {
 
 
 void ui_init(UIState *s) {
-  s->sm = new SubMaster({"modelV2", "controlsState", "uiLayoutState", "liveCalibration", "radarState", "thermal", "frame", "liveLocationKalman",
-                         "health", "carParams", "driverState", "driverMonitoringState", "sensorEvents", "carState", "ubloxGnss"});
+  s->sm = new SubMaster({"modelV2", "controlsState", "uiLayoutState", "liveCalibration", "radarState", "thermal",
+                         "gpsLocationExternal", "frame", "liveLocationKalman", "health", "carParams", "lateralPlan",
+                         "driverState", "driverMonitoringState", "sensorEvents", "carState", "ubloxGnss"});
 
   s->started = false;
   s->status = STATUS_OFFROAD;
@@ -126,15 +127,28 @@ static void update_sockets(UIState *s) {
   UIScene &scene = s->scene;
   if (s->started && sm.updated("controlsState")) {
     scene.controls_state = sm["controlsState"].getControlsState();
+
+    // TODO: the alert stuff shouldn't be handled here
+    s->scene.angleSteers = scene.controls_state.getAngleSteers();
+    s->scene.steerOverride= scene.controls_state.getSteerOverride();
+    s->scene.output_scale = scene.controls_state.getLateralControlState().getPidState().getOutput();
+    s->scene.angleSteersDes = scene.controls_state.getAngleSteersDes();
   }
   if (sm.updated("carState")) {
     scene.car_state = sm["carState"].getCarState();
+    s->scene.brakeLights = scene.car_state.getBrakeLights();
+    s->scene.steeringTorqueEps = scene.car_state.getSteeringTorqueEps();
   }
   if (sm.updated("radarState")) {
     auto radar_state = sm["radarState"].getRadarState();
     const auto line = sm["modelV2"].getModelV2().getPosition();
     update_lead(s, radar_state, line, 0);
     update_lead(s, radar_state, line, 1);
+    scene.lead_data[0] = radar_state.getLeadOne();
+    scene.lead_data[1] = radar_state.getLeadTwo();
+    s->scene.lead_v_rel = scene.lead_data[0].getVRel();
+    s->scene.lead_d_rel = scene.lead_data[0].getDRel();
+    s->scene.lead_status = scene.lead_data[0].getStatus();
   }
   if (sm.updated("liveCalibration")) {
     scene.world_objects_visible = true;
@@ -163,6 +177,20 @@ static void update_sockets(UIState *s) {
   }
   if (sm.updated("thermal")) {
     scene.thermal = sm["thermal"].getThermal();
+    s->scene.cpuTemp = scene.thermal.getCpu()[0];
+    s->scene.cpuUsagePercent = scene.thermal.getCpuUsagePercent();
+  }
+  if (sm.updated("lateralPlan")) {
+    scene.lateral_plan = sm["lateralPlan"].getLateralPlan();
+  }
+  if (sm.updated("gpsLocationExternal")) {
+    auto data = sm["gpsLocationExternal"].getGpsLocationExternal();
+    scene.gpsAccuracy = data.getAccuracy();
+
+    if (scene.gpsAccuracy > 100)
+      scene.gpsAccuracy = 99.99;
+    else if (scene.gpsAccuracy == 0)
+      scene.gpsAccuracy = 99.8;
   }
   if (sm.updated("health")) {
     auto health = sm["health"].getHealth();

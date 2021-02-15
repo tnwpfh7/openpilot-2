@@ -36,6 +36,9 @@
 #define COLOR_WHITE_ALPHA(x) nvgRGBA(255, 255, 255, x)
 #define COLOR_YELLOW nvgRGBA(218, 202, 37, 255)
 #define COLOR_RED nvgRGBA(201, 34, 49, 255)
+#define COLOR_OCHRE nvgRGBA(218, 111, 37, 255)
+#define COLOR_GREEN_ALPHA(x) nvgRGBA(0, 255, 0, x)
+#define COLOR_BLUE_ALPHA(x) nvgRGBA(0, 0, 255, x)
 
 #define UI_BUF_COUNT 4
 
@@ -52,6 +55,7 @@ typedef struct Rect {
 
 const int sbr_w = 300;
 const int bdr_s = 30;
+const int bdr_is = 30;
 const int header_h = 420;
 const int footer_h = 280;
 const Rect settings_btn = {50, 35, 200, 117};
@@ -80,7 +84,7 @@ static std::map<UIStatus, NVGcolor> bg_colors = {
   {STATUS_OFFROAD, nvgRGBA(0x0, 0x0, 0x0, 0xff)},
 #endif
   {STATUS_DISENGAGED, nvgRGBA(0x17, 0x33, 0x49, 0xc8)},
-  {STATUS_ENGAGED, nvgRGBA(0x17, 0x86, 0x44, 0xf1)},
+  {STATUS_ENGAGED, nvgRGBA(0x00, 0x80, 0x80, 0xf1)},
   {STATUS_WARNING, nvgRGBA(0xDA, 0x6F, 0x25, 0xf1)},
   {STATUS_ALERT, nvgRGBA(0xC9, 0x22, 0x31, 0xf1)},
 };
@@ -102,11 +106,24 @@ typedef struct UIScene {
   bool is_rhd;
   bool frontview;
 
+  int lead_status;
+  float lead_d_rel, lead_v_rel;
+
   std::string alert_text1;
   std::string alert_text2;
   std::string alert_type;
   float alert_blinking_rate;
   cereal::ControlsState::AlertSize alert_size;
+
+  float angleSteers;
+  bool brakeLights;
+  float angleSteersDes;
+  bool steerOverride;
+  float output_scale;
+  float steeringTorqueEps;
+  float aEgo;
+  float cpuTemp;
+  int cpuUsagePercent;
 
   cereal::HealthData::PandaType pandaType;
   NetStatus athenaStatus;
@@ -116,10 +133,14 @@ typedef struct UIScene {
   cereal::CarState::Reader car_state;
   cereal::ControlsState::Reader controls_state;
   cereal::DriverState::Reader driver_state;
+  cereal::LateralPlan::Reader lateral_plan;
   cereal::DriverMonitoringState::Reader dmonitoring_state;
 
   // gps
+
+  float gpsAccuracy;
   int satelliteCount;
+  int cnoAvg;
   bool gpsOK;
 
   // modelV2
