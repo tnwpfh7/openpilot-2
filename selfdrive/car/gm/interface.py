@@ -73,7 +73,7 @@ class CarInterface(CarInterfaceBase):
     # Presence of a camera on the object bus is ok.
     # Have to go to read_only if ASCM is online (ACC-enabled cars),
     # or camera is on powertrain bus (LKA cars without ACC).
-    ret.enableCamera = True
+    ret.enableCamera = is_ecu_disconnected(fingerprint[0], FINGERPRINTS, ECU_FINGERPRINT, candidate, Ecu.fwdCamera)
     ret.openpilotLongitudinalControl = ret.enableCamera
     tire_stiffness_factor = 0.444  # not optimized yet
 
@@ -198,6 +198,9 @@ class CarInterface(CarInterfaceBase):
 
     ret.buttonEvents = buttonEvents
 
+    if cruiseEnabled and self.CS.lka_button and self.CS.lka_button != self.CS.prev_lka_button:
+      self.CS.lkMode = not self.CS.lkMode
+
     if self.CS.distance_button and self.CS.distance_button != self.CS.prev_distance_button:
        self.CS.follow_level -= 1
        if self.CS.follow_level < 1:
@@ -215,6 +218,8 @@ class CarInterface(CarInterfaceBase):
     #   events.add(EventName.controlsFailed)
     # if ret.vEgo < self.CP.minSteerSpeed:
     #   events.add(car.CarEvent.EventName.belowSteerSpeed)
+    if self.CS.autoHoldActivated:
+      events.add(car.CarEvent.EventName.autoHoldActivated)
 
     # handle button presses
     for b in ret.buttonEvents:
@@ -276,4 +281,15 @@ class CarInterface(CarInterfaceBase):
                                c.hudControl.leadVisible, c.hudControl.visualAlert)
 
     self.frame += 1
+
+    # Release Auto Hold and creep smoothly when regenpaddle pressed
+    if self.CS.regenPaddlePressed and self.CS.autoHold:
+      self.CS.autoHoldActive = False
+
+    if self.CS.autoHold and not self.CS.autoHoldActive and not self.CS.regenPaddlePressed:
+      if self.CS.out.vEgo > 0.02:
+        self.CS.autoHoldActive = True
+      elif self.CS.out.vEgo < 0.01 and self.CS.out.brakePressed:
+        self.CS.autoHoldActive = True
+
     return can_sends
