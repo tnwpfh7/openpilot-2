@@ -186,6 +186,7 @@ def thermald_thread():
 
   network_type = NetworkType.none
   network_strength = NetworkStrength.unknown
+  wifiIpAddress = 'N/A'
 
   current_filter = FirstOrderFilter(0., CURRENT_TAU, DT_TRML)
   cpu_temp_filter = FirstOrderFilter(0., CPU_TEMP_TAU, DT_TRML)
@@ -242,6 +243,7 @@ def thermald_thread():
       try:
         network_type = HARDWARE.get_network_type()
         network_strength = HARDWARE.get_network_strength(network_type)
+        wifiIpAddress = HARDWARE.get_ip_address()
       except Exception:
         cloudlog.exception("Error getting network status")
 
@@ -250,6 +252,7 @@ def thermald_thread():
     msg.thermal.cpuUsagePercent = int(round(psutil.cpu_percent()))
     msg.thermal.networkType = network_type
     msg.thermal.networkStrength = network_strength
+    msg.thermal.wifiIpAddress = wifiIpAddress
     msg.thermal.batteryPercent = HARDWARE.get_battery_capacity()
     msg.thermal.batteryStatus = HARDWARE.get_battery_status()
     msg.thermal.batteryCurrent = HARDWARE.get_battery_current()
