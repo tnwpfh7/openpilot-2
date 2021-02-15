@@ -59,8 +59,11 @@ static void draw_network_type(UIState *s) {
   nvgFillColor(s->vg, COLOR_WHITE);
   nvgFontSize(s->vg, 48);
   nvgFontFace(s->vg, "sans-regular");
-  nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+  nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
   nvgTextBox(s->vg, network_x, network_y, network_w, network_type ? network_type : "--", NULL);
+
+  std::string ip = s->scene.thermal.getWifiIpAddress();
+  nvgTextBox(s->vg, network_x, network_y + 40, 250, ip.c_str(), NULL);
 }
 
 static void draw_metric(UIState *s, const char *label_str, const char *value_str, const int severity, const int y_offset, const char *message_str) {
@@ -74,7 +77,7 @@ static void draw_metric(UIState *s, const char *label_str, const char *value_str
     status_color = COLOR_RED;
   }
 
-  const Rect rect = {30, 338 + y_offset, 240, message_str ? strchr(message_str, '\n') ? 124 : 100 : 148};
+  const Rect rect = {30, 338 + y_offset, 240, message_str ? strchr(message_str, '\n') ? 130 : 130 : 130};
   ui_draw_rect(s->vg, rect, severity > 0 ? COLOR_WHITE : COLOR_WHITE_ALPHA(85), 2, 20.);
 
   nvgBeginPath(s->vg);
@@ -87,13 +90,13 @@ static void draw_metric(UIState *s, const char *label_str, const char *value_str
     nvgFontSize(s->vg, 78);
     nvgFontFace(s->vg, "sans-bold");
     nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-    nvgTextBox(s->vg, rect.x + 50, rect.y + 50, rect.w - 60, value_str, NULL);
+    nvgTextBox(s->vg, rect.x + 50, rect.y + 35, rect.w - 60, value_str, NULL);
 
     nvgFillColor(s->vg, COLOR_WHITE);
     nvgFontSize(s->vg, 48);
     nvgFontFace(s->vg, "sans-regular");
     nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-    nvgTextBox(s->vg, rect.x + 50, rect.y + 50 + 66, rect.w - 60, label_str, NULL);
+    nvgTextBox(s->vg, rect.x + 50, rect.y + 30 + 66, rect.w - 60, label_str, NULL);
   } else {
     nvgFillColor(s->vg, COLOR_WHITE);
     nvgFontSize(s->vg, 48);
@@ -110,22 +113,22 @@ static void draw_temp_metric(UIState *s) {
       {cereal::ThermalData::ThermalStatus::RED, 2},
       {cereal::ThermalData::ThermalStatus::DANGER, 3}};
   std::string temp_val = std::to_string((int)s->scene.thermal.getAmbient()) + "°C";
-  draw_metric(s, "TEMP", temp_val.c_str(), temp_severity_map[s->scene.thermal.getThermalStatus()], 0, NULL);
+  draw_metric(s, "TEMP", temp_val.c_str(), temp_severity_map[s->scene.thermal.getThermalStatus()], 20, NULL);
 }
 
 static void draw_panda_metric(UIState *s) {
-  const int panda_y_offset = 32 + 148;
+  const int panda_y_offset = 30 + 148;
 
   int panda_severity = 0;
-  std::string panda_message = "VEHICLE\nONLINE";
+  std::string panda_message = "판다\n연결됨";
   if (s->scene.pandaType == cereal::HealthData::PandaType::UNKNOWN) {
     panda_severity = 2;
-    panda_message = "NO\nPANDA";
+    panda_message = "판다\n연결안됨";
   }
 #ifdef QCOM2
   else if (s->started) {
     panda_severity = s->scene.gpsOK ? 0 : 1;
-    panda_message = util::string_format("SAT CNT\n%d", s->scene.satelliteCount);
+    panda_message = util::string_format("위성수\n%d개", s->scene.satelliteCount);
   }
 #endif
 
