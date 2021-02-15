@@ -284,6 +284,7 @@ struct ThermalData {
   offroadPowerUsage @23 :UInt32;  # Power usage since going offroad in uWh
   networkStrength @24 :NetworkStrength;
   carBatteryCapacity @25 :UInt32; # Estimated remaining car battery capacity in uWh
+  wifiIpAddress @31 :Text;
 
   fanSpeedPercentDesired @10 :UInt16;
   started @11 :Bool;
@@ -483,11 +484,15 @@ struct LiveTracks {
 }
 
 struct ControlsState @0x97ff69c53601abf1 {
-  vEgo @0 :Float32;
   startMonoTime @48 :UInt64;
   canMonoTimes @21 :List(UInt64);
   longitudinalPlanMonoTime @28 :UInt64;
   lateralPlanMonoTime @50 :UInt64;
+
+  #Kegman 3Bar Distance Profile
+  vEgo @0 :Float32;
+  angleSteers @13 :Float32;
+  steerOverride @20 :Bool;
 
   state @31 :OpenpilotState;
   enabled @19 :Bool;
@@ -501,8 +506,6 @@ struct ControlsState @0x97ff69c53601abf1 {
   uiAccelCmd @5 :Float32;
   ufAccelCmd @33 :Float32;
   aTarget @35 :Float32;
-  steerOverride @20 :Bool;
-  angleSteers @13 :Float32;
   angleSteersDes @29 :Float32;
   curvature @37 :Float32;  # path curvature from vehicle model
   forceDecel @51 :Bool;
@@ -637,6 +640,13 @@ struct ModelDataV2 {
 
   meta @12 :MetaData;
 
+  #Slow on Curve
+  path @18 :PathData;
+
+  struct PathData {
+    poly @0 :List(Float32);
+  }
+
   struct XYZTData {
     x @0 :List(Float32);
     y @1 :List(Float32);
@@ -768,6 +778,7 @@ struct LateralPlan @0xe1e9318e2ae8b51e {
   laneChangeState @18 :LaneChangeState;
   laneChangeDirection @19 :LaneChangeDirection;
 
+  #Kegman 3Bar Distance Profile
   steerRatio @22 :Float32;
   steerRateCost @23 :Float32;
   steerActuatorDelay @24 :Float32;
@@ -1264,6 +1275,8 @@ struct LiveParametersData {
   angleOffsetAverage @3 :Float32;
   stiffnessFactor @4 :Float32;
   steerRatio @5 :Float32;
+  steerRateCost @10 :Float32;
+  steerActuatorDelay @11 :Float32;
   sensorValid @6 :Bool;
   yawRate @7 :Float32;
   posenetSpeed @8 :Float32;
