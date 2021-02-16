@@ -121,6 +121,7 @@ typedef struct UIScene {
   bool steerOverride;
   float output_scale;
   float steeringTorqueEps;
+  int engineRPM;
   float aEgo;
   float cpuTemp;
   int cpuUsagePercent;
