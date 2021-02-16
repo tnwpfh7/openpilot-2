@@ -277,8 +277,22 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
     char val_str[16];
     char uom_str[3];
     NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
+    //show red/orange if gps accuracy is low
+      if(scene->gpsAccuracy > 0.8) {
+        val_color = nvgRGBA(255, 188, 3, 200);
+      }
+      if(scene->gpsAccuracy > 1.5) {
+        val_color = nvgRGBA(255, 80, 80, 200);
+      }
     // gps accuracy is always in meters
-    snprintf(val_str, sizeof(val_str), "%.2f", (s->scene.gpsAccuracy));
+    if(scene->gpsAccuracy > 99 || scene->gpsAccuracy == 0) {
+      snprintf(val_str, sizeof(val_str), "None");
+    }else if(scene->gpsAccuracy > 9.99) {
+      snprintf(val_str, sizeof(val_str), "%.1f", (s->scene.gpsAccuracy));
+    }
+    else {
+      snprintf(val_str, sizeof(val_str), "%.2f", (s->scene.gpsAccuracy));
+    }
     snprintf(uom_str, sizeof(uom_str), "m");
     bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "GPS정확도",
         bb_rx, bb_ry, bb_uom_dx,
@@ -288,23 +302,23 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
   }
 
   //add panda GPS satellite
-//  if (true) {
-//    char val_str[16];
-//    char uom_str[3];
-//    int panda_severity = 0;
-//    NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
-//    if (s->started) {
-//      panda_severity = s->scene.gpsOK ? 0 : 1;
-//      snprintf(val_str, sizeof(val_str), "%d", (s->scene.satelliteCount));
-//      snprintf(uom_str, sizeof(uom_str), "");
-//      bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "위성수",
-//          bb_rx, bb_ry, bb_uom_dx,
-//          val_color, lab_color, uom_color,
-//          value_fontSize, label_fontSize, uom_fontSize );
-//      bb_ry = bb_y + bb_h;
-//    }
-//  }
-//
+  if (true) {
+    char val_str[16];
+    char uom_str[3];
+    int panda_severity = 0;
+    NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
+    if (s->started) {
+      panda_severity = s->scene.gpsOK ? 0 : 1;
+      snprintf(val_str, sizeof(val_str), "%d", (s->scene.satelliteCount));
+      snprintf(uom_str, sizeof(uom_str), "");
+      bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "위성수",
+          bb_rx, bb_ry, bb_uom_dx,
+          val_color, lab_color, uom_color,
+          value_fontSize, label_fontSize, uom_fontSize );
+      bb_ry = bb_y + bb_h;
+    }
+  }
+
   //add EPS Motor Torque
   if (true) {
     char val_str[16];
@@ -313,6 +327,23 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
     snprintf(val_str, sizeof(val_str), "%.0f", (s->scene.steeringTorqueEps));
     snprintf(uom_str, sizeof(uom_str), "Nm");
     bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "모터토크",
+        bb_rx, bb_ry, bb_uom_dx,
+        val_color, lab_color, uom_color,
+        value_fontSize, label_fontSize, uom_fontSize );
+    bb_ry = bb_y + bb_h;
+  }
+
+  //engineRPM
+  if (true) {
+    char val_str[16];
+    char uom_str[4];
+    NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
+    if(s->scene.engineRPM == 0) {
+      snprintf(val_str, sizeof(val_str), "OFF");
+    }
+    else {snprintf(val_str, sizeof(val_str), "%d", (s->scene.engineRPM));}
+    snprintf(uom_str, sizeof(uom_str), "");
+    bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "ENG RPM",
         bb_rx, bb_ry, bb_uom_dx,
         val_color, lab_color, uom_color,
         value_fontSize, label_fontSize, uom_fontSize );

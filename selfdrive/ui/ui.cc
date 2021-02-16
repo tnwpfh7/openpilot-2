@@ -137,6 +137,7 @@ static void update_sockets(UIState *s) {
   if (sm.updated("carState")) {
     scene.car_state = sm["carState"].getCarState();
     s->scene.brakeLights = scene.car_state.getBrakeLights();
+    s->scene.engineRPM = scene.car_state.getEngineRPM();
     s->scene.steeringTorqueEps = scene.car_state.getSteeringTorqueEps();
   }
   if (sm.updated("radarState")) {
