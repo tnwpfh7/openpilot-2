@@ -185,6 +185,8 @@ class CarInterface(CarInterfaceBase):
     ret.canValid = self.cp.can_valid
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
 
+    ret.engineRPM = self.CS.engineRPM
+
     buttonEvents = []
 
     if self.CS.cruise_buttons != self.CS.prev_cruise_buttons and self.CS.prev_cruise_buttons != CruiseButtons.INIT:
