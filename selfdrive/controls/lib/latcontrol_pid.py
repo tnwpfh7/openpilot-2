@@ -7,15 +7,15 @@ from selfdrive.kegman_kans_conf import kegman_kans_conf
 
 class LatControlPID():
   def __init__(self, CP):
-    self.pid = PIController((CP.lateralTuning.pid.kpBP, CP.lateralTuning.pid.kpV),
-                            (CP.lateralTuning.pid.kiBP, CP.lateralTuning.pid.kiV),
-                            k_f=CP.lateralTuning.pid.kf, pos_limit=1.0, neg_limit=-1.0,
-                            sat_limit=CP.steerLimitTimer)
 #add kegman's config
     self.kegman_kans = kegman_kans_conf(CP)
     self.deadzone = float(self.kegman_kans.conf['deadzone'])
-
+    self.pid = LatPIDController((CP.lateralTuning.pid.kpBP, CP.lateralTuning.pid.kpV),
+                               (CP.lateralTuning.pid.kiBP, CP.lateralTuning.pid.kiV),
+                               (CP.lateralTuning.pid.kdBP, CP.lateralTuning.pid.kdV),
+                               k_f=CP.lateralTuning.pid.kf, pos_limit=1.0, sat_limit=CP.steerLimitTimer)
     self.angle_steers_des = 0.
+    self.mpc_frame = 0
 #	
 # interpolate sR according to Angle part01
     self.angle_steers_des_last = 0.
@@ -25,7 +25,28 @@ class LatControlPID():
   def reset(self):
     self.pid.reset()
 
+  def live_tune(self, CP):
+    self.mpc_frame += 1
+    if self.mpc_frame % 300 == 0:
+      # live tuning through /data/openpilot/tune.py overrides interface.py settings
+      self.kegman_kans = kegman_kans_conf()
+      if self.kegman_kans.conf['tuneGernby'] == "1":
+        self.steerKpV = [float(self.kegman_kans.conf['Kp'])]
+        self.steerKiV = [float(self.kegman_kans.conf['Ki'])]
+        self.steerKdV = [float(self.kegman_kans.conf['Kd'])]
+        self.steerKf = float(self.kegman_kans.conf['Kf'])
+        self.steerLimitTimer = float(self.kegman_kans.conf['steerLimitTimer'])
+        self.pid = LatPIDController((CP.lateralTuning.pid.kpBP, self.steerKpV),
+                                   (CP.lateralTuning.pid.kiBP, self.steerKiV),
+                                   (CP.lateralTuning.pid.kdBP, self.steerKdV),
+                                   k_f=self.steerKf, pos_limit=1.0, sat_limit=self.steerLimitTimer)
+        self.deadzone = float(self.kegman_kans.conf['deadzone'])
+
+      self.mpc_frame = 0 
+
   def update(self, active, CS, CP, path_plan):
+    self.live_tune(CP)
+
     pid_log = log.ControlsState.LateralPIDState.new_message()
     pid_log.steerAngle = float(CS.steeringAngle)
     pid_log.steerRate = float(CS.steeringRate)

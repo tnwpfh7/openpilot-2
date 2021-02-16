@@ -90,8 +90,21 @@ class CarInterface(CarInterfaceBase):
       ret.minEnableSpeed = 18 * CV.MPH_TO_MS
       ret.mass = 1607. + STD_CARGO_KG
       ret.wheelbase = 2.69
-      ret.steerRatio = 15.7
+
+      ret.lateralTuning.init('pid')
+      ret.steerRatio = 15.07
+      rt = 0.36
       ret.steerRatioRear = 0.
+      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.45*rt], [0.04*rt]]
+      ret.lateralTuning.pid.kdBP = [0.]
+      ret.lateralTuning.pid.kdV = [0.2*rt]  # corolla from shane fork : 0.725
+      ret.lateralTuning.pid.kf = 0.0002*rt  # this number means 50kph(0.000000061082 base)
+      tire_stiffness_factor = 0.792  # not optimized yet
+      ret.steerRateCost = 0.612
+      ret.steerActuatorDelay = 0.18
+      ret.steerRateCost = 0.66
+      ret.steerActuatorDelay = 0.175
       ret.centerToFront = ret.wheelbase * 0.4  # wild guess
 
     elif candidate == CAR.MALIBU:
