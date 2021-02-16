@@ -6,6 +6,7 @@ from selfdrive.swaglog import cloudlog
 from selfdrive.controls.lib.longitudinal_planner import Planner
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.controls.lib.lateral_planner import LateralPlanner
+from selfdrive.controls.lib.lane_planner import LanePlanner
 import cereal.messaging as messaging
 
 
@@ -32,6 +33,8 @@ def plannerd_thread(sm=None, pm=None):
   sm['liveParameters'].valid = True
   sm['liveParameters'].sensorValid = True
   sm['liveParameters'].steerRatio = CP.steerRatio
+  sm['liveParameters'].steerRateCost = CP.steerRateCost
+  sm['liveParameters'].steerActuatorDelay = CP.steerActuatorDelay
   sm['liveParameters'].stiffnessFactor = 1.0
 
   while True:
@@ -39,7 +42,7 @@ def plannerd_thread(sm=None, pm=None):
 
     if sm.updated['modelV2']:
       PP.update(sm, CP, VM)
-      PP.publish(sm, pm)
+      PP.publish(sm, pm, CP, VM)
     if sm.updated['radarState']:
       PL.update(sm, CP, VM, PP)
       PL.publish(sm, pm)

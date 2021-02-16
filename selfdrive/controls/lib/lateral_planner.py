@@ -2,6 +2,7 @@ import os
 import math
 import numpy as np
 from common.realtime import sec_since_boot, DT_MDL
+from selfdrive.car.gm.values import CAR
 from common.numpy_fast import interp
 from selfdrive.swaglog import cloudlog
 from selfdrive.controls.lib.lateral_mpc import libmpc_py
@@ -9,15 +10,17 @@ from selfdrive.controls.lib.drive_helpers import MPC_COST_LAT, MPC_N, CAR_ROTATI
 from selfdrive.controls.lib.lane_planner import LanePlanner, TRAJECTORY_SIZE
 from selfdrive.config import Conversions as CV
 from common.params import Params
+from selfdrive.kegman_kans_conf import kegman_kans_conf
 import cereal.messaging as messaging
 from cereal import log
+from selfdrive.ntune import ntune_get, ntune_isEnabled
 
 LaneChangeState = log.LateralPlan.LaneChangeState
 LaneChangeDirection = log.LateralPlan.LaneChangeDirection
 
 LOG_MPC = os.environ.get('LOG_MPC', False)
 
-LANE_CHANGE_SPEED_MIN = 45 * CV.MPH_TO_MS
+LANE_CHANGE_SPEED_MIN = 15 * CV.MPH_TO_MS
 LANE_CHANGE_TIME_MAX = 10.
 
 DESIRES = {
@@ -42,12 +45,20 @@ DESIRES = {
 }
 
 
+def calc_states_after_delay(states, v_ego, steer_angle, curvature_factor, steer_ratio, delay):
+  states[0].x = v_ego * delay
+  states[0].psi = v_ego * curvature_factor * math.radians(steer_angle) / steer_ratio * delay
+  states[0].y = states[0].x * math.sin(states[0].psi / 2)
+  return states
+
 class LateralPlanner():
   def __init__(self, CP):
     self.LP = LanePlanner()
 
     self.last_cloudlog_t = 0
-    self.steer_rate_cost = CP.steerRateCost
+    #self.steer_rate_cost = CP.steerRateCost
+    self.steer_rate_cost_prev = ntune_get('steerRateCost')
+    self.steer_actuator_delay_prev = ntune_get('steerActuatorDelay')
 
     self.setup_mpc()
     self.solution_invalid_cnt = 0
@@ -64,9 +75,21 @@ class LateralPlanner():
     self.t_idxs = np.arange(TRAJECTORY_SIZE)
     self.y_pts = np.zeros(TRAJECTORY_SIZE)
 
+    self.mpc_frame = 0
+    self.sR_time = 1
+    self.sR_delay_counter = 0
+    self.v_ego_ed = 0.0
+
+    self.use_dynamic_sr = CP.carName in [CAR.VOLT]
+
+    kegman_kans = kegman_kans_conf(CP)
+    self.alc_nudge_less = bool(int(kegman_kans.conf['ALCnudgeLess']))
+    self.alc_min_speed = float(kegman_kans.conf['ALCminSpeed'])
+    self.alc_timer = float(kegman_kans.conf['ALCtimer'])
+
   def setup_mpc(self):
     self.libmpc = libmpc_py.libmpc
-    self.libmpc.init(MPC_COST_LAT.PATH, MPC_COST_LAT.HEADING, self.steer_rate_cost)
+    self.libmpc.init(MPC_COST_LAT.PATH, MPC_COST_LAT.HEADING, self.steer_rate_cost_prev)
 
     self.mpc_solution = libmpc_py.ffi.new("log_t *")
     self.cur_state = libmpc_py.ffi.new("state_t *")
@@ -77,19 +100,56 @@ class LateralPlanner():
 
     self.angle_steers_des = 0.0
     self.angle_steers_des_mpc = 0.0
+    self.angle_steers_des_prev = 0.0
     self.angle_steers_des_time = 0.0
 
   def update(self, sm, CP, VM):
+
     v_ego = sm['carState'].vEgo
     active = sm['controlsState'].active
+    # angle_offset = sm['liveParameters'].angleOffset
     steering_wheel_angle_offset_deg = sm['liveParameters'].angleOffset
+    # angle_steers = sm['carState'].steeringAngle
     steering_wheel_angle_deg = sm['carState'].steeringAngle
+
+    if self.steer_rate_cost_prev != ntune_get('steerRateCost'):
+      self.steer_rate_cost_prev = ntune_get('steerRateCost')
+
+    if self.steer_actuator_delay_prev != ntune_get('steerActuatorDelay'):
+      self.steer_actuator_delay_prev = ntune_get('steerActuatorDelay')
+
+      self.libmpc.init(MPC_COST_LAT.PATH, MPC_COST_LAT.HEADING, self.steer_rate_cost_prev)
+      self.cur_state[0].curvature = math.radians(steering_wheel_angle_deg - steering_wheel_angle_offset_deg) / VM.sR
+
+    # Run MPC
+    self.angle_steers_des_prev = self.angle_steers_des_mpc
 
     # Update vehicle model
     x = max(sm['liveParameters'].stiffnessFactor, 0.1)
-    sr = max(sm['liveParameters'].steerRatio, 0.1)
+
+    if self.use_dynamic_sr:
+      sr = interp(abs(self.angle_steers_des_mpc), [5., 35.], [13.5, 17.5])
+    else:
+      if ntune_isEnabled('useLiveSteerRatio'):
+        sr = max(sm['liveParameters'].steerRatio, 0.1)
+      else:
+        sr = max(ntune_get('steerRatio'), 0.1)
+
     VM.update_params(x, sr)
+
     curvature_factor = VM.curvature_factor(v_ego)
+
+    # Get sR, BP, Time from kegman.json every x seconds
+    self.mpc_frame += 1
+    if self.mpc_frame % 500 == 0:
+      kegman_kans = kegman_kans_conf()
+      if kegman_kans.conf['nTune'] == "1":
+        self.sR = [ntune_get('steerRatio'), ntune_get('steerRatio') + float(kegman_kans.conf['sR_boost'])]
+        self.sRBP = [float(kegman_kans.conf['sR_BP0']), float(kegman_kans.conf['sR_BP1'])]
+        self.sR_time = int(float(kegman_kans.conf['sR_time'])) * 100
+
+      self.mpc_frame = 0
+
     measured_curvature = -curvature_factor * math.radians(steering_wheel_angle_deg - steering_wheel_angle_offset_deg) / VM.sR
 
 
@@ -101,21 +161,32 @@ class LateralPlanner():
       self.plan_yaw = list(md.orientation.z)
 
     # Lane change logic
+    lane_change_direction = LaneChangeDirection.none
     one_blinker = sm['carState'].leftBlinker != sm['carState'].rightBlinker
-    below_lane_change_speed = v_ego < LANE_CHANGE_SPEED_MIN
+    below_lane_change_speed = v_ego < self.alc_min_speed
 
-    if sm['carState'].leftBlinker:
-      self.lane_change_direction = LaneChangeDirection.left
-    elif sm['carState'].rightBlinker:
-      self.lane_change_direction = LaneChangeDirection.right
-
-    if (not active) or (self.lane_change_timer > LANE_CHANGE_TIME_MAX) or (not self.lane_change_enabled):
+    if not active or self.lane_change_timer > 10.0:
       self.lane_change_state = LaneChangeState.off
-      self.lane_change_direction = LaneChangeDirection.none
+      self.pre_lane_change_timer = 0.0
     else:
-      torque_applied = sm['carState'].steeringPressed and \
-                       ((sm['carState'].steeringTorque > 0 and self.lane_change_direction == LaneChangeDirection.left) or
-                        (sm['carState'].steeringTorque < 0 and self.lane_change_direction == LaneChangeDirection.right))
+      if sm['carState'].leftBlinker:
+        self.lane_change_direction = LaneChangeDirection.left
+        self.pre_lane_change_timer += DT_MDL
+      elif sm['carState'].rightBlinker:
+        self.lane_change_direction = LaneChangeDirection.right
+        self.pre_lane_change_timer += DT_MDL
+      else:
+        self.pre_lane_change_timer = 0.0
+
+      if self.alc_nudge_less and self.pre_lane_change_timer > self.alc_timer:
+        torque_applied = True
+
+      else:
+        if lane_change_direction == LaneChangeDirection.left:
+          torque_applied = sm['carState'].steeringTorque > 0 and sm['carState'].steeringPressed
+        else:
+          torque_applied = sm['carState'].steeringTorque < 0 and sm['carState'].steeringPressed
+
 
       blindspot_detected = ((sm['carState'].leftBlindspot and self.lane_change_direction == LaneChangeDirection.left) or
                             (sm['carState'].rightBlindspot and self.lane_change_direction == LaneChangeDirection.right))
@@ -170,6 +241,12 @@ class LateralPlanner():
     heading_pts = np.interp(v_ego * self.t_idxs[:MPC_N+1], np.linalg.norm(self.path_xyz, axis=1), self.plan_yaw)
     self.y_pts = y_pts
 
+    steerActuatorDelay = ntune_get('steerActuatorDelay')
+
+    # account for actuation delay
+    self.cur_state = calc_states_after_delay(self.cur_state, v_ego, steering_wheel_angle_deg - steering_wheel_angle_offset_deg, curvature_factor, VM.sR,
+                                             steerActuatorDelay)
+
     assert len(y_pts) == MPC_N + 1
     assert len(heading_pts) == MPC_N + 1
     self.libmpc.run_mpc(self.cur_state, self.mpc_solution,
@@ -184,7 +261,7 @@ class LateralPlanner():
     self.cur_state.curvature = interp(DT_MDL, self.t_idxs[:MPC_N+1], self.mpc_solution.curvature)
 
     # TODO this needs more thought, use .2s extra for now to estimate other delays
-    delay = CP.steerActuatorDelay + .2
+    delay = steerActuatorDelay + .2
     next_curvature = interp(delay, self.t_idxs[:MPC_N+1], self.mpc_solution.curvature)
     psi = interp(delay, self.t_idxs[:MPC_N+1], self.mpc_solution.psi)
     next_curvature_rate = self.mpc_solution.curvature_rate[0]
@@ -210,7 +287,7 @@ class LateralPlanner():
     mpc_nans = any(math.isnan(x) for x in self.mpc_solution.curvature)
     t = sec_since_boot()
     if mpc_nans:
-      self.libmpc.init(MPC_COST_LAT.PATH, MPC_COST_LAT.HEADING, CP.steerRateCost)
+      self.libmpc.init(MPC_COST_LAT.PATH, MPC_COST_LAT.HEADING, self.steer_rate_cost_prev)
       self.cur_state.curvature = measured_curvature
 
       if t > self.last_cloudlog_t + 5.0:
@@ -222,7 +299,7 @@ class LateralPlanner():
     else:
       self.solution_invalid_cnt = 0
 
-  def publish(self, sm, pm):
+  def publish(self, sm, pm, CP, VM):
     plan_solution_valid = self.solution_invalid_cnt < 2
     plan_send = messaging.new_message('lateralPlan')
     plan_send.valid = sm.all_alive_and_valid(service_list=['carState', 'controlsState', 'liveParameters', 'modelV2'])
@@ -234,12 +311,16 @@ class LateralPlanner():
 
     plan_send.lateralPlan.angleSteers = float(self.desired_steering_wheel_angle_deg)
     plan_send.lateralPlan.rateSteers = float(self.desired_steering_wheel_angle_rate_deg)
-    plan_send.lateralPlan.angleOffset = float(sm['liveParameters'].angleOffsetAverage)
+    plan_send.lateralPlan.angleOffset = float(sm['liveParameters'].angleOffset)
     plan_send.lateralPlan.mpcSolutionValid = bool(plan_solution_valid)
 
     plan_send.lateralPlan.desire = self.desire
     plan_send.lateralPlan.laneChangeState = self.lane_change_state
     plan_send.lateralPlan.laneChangeDirection = self.lane_change_direction
+
+    plan_send.lateralPlan.steerRatio = VM.sR
+    plan_send.lateralPlan.steerRateCost = self.steer_rate_cost_prev
+    plan_send.lateralPlan.steerActuatorDelay = self.steer_actuator_delay_prev
 
     pm.send('lateralPlan', plan_send)
 
