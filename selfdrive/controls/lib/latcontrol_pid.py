@@ -2,6 +2,7 @@ from selfdrive.controls.lib.pid import LatPIDController
 from selfdrive.controls.lib.drive_helpers import get_steer_max
 from cereal import car
 from cereal import log
+from common.numpy_fast import interp
 from selfdrive.kegman_kans_conf import kegman_kans_conf
 
 
