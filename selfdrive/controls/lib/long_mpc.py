@@ -19,41 +19,41 @@ else:
 if "TWO_BAR_DISTANCE" in kegman_kans.conf:
     TWO_BAR_DISTANCE = float(kegman_kans.conf['TWO_BAR_DISTANCE'])
 else:
-    TWO_BAR_DISTANCE = 1.3  # in seconds
+    TWO_BAR_DISTANCE = 1.8  # in seconds
 if "THREE_BAR_DISTANCE" in kegman_kans.conf:
     THREE_BAR_DISTANCE = float(kegman_kans.conf['THREE_BAR_DISTANCE'])
 else:
-    THREE_BAR_DISTANCE = 1.8  # in seconds
+    THREE_BAR_DISTANCE = 3.6  # in seconds
 if "FOUR_BAR_DISTANCE" in kegman_kans.conf:
     FOUR_BAR_DISTANCE = float(kegman_kans.conf['FOUR_BAR_DISTANCE'])
 else:
-    FOUR_BAR_DISTANCE = 2.3   # in seconds
+    FOUR_BAR_DISTANCE = 4.0   # in seconds
 if "STOPPING_DISTANCE" in kegman_kans.conf:
     STOPPING_DISTANCE = float(kegman_kans.conf['STOPPING_DISTANCE'])
 else:
-    STOPPING_DISTANCE = 2  # distance between you and lead car when you come to stop
+    STOPPING_DISTANCE = 1.0  # distance between you and lead car when you come to stop
 
 TR = TWO_BAR_DISTANCE  # default interval
 
 # Variables that change braking profiles
-CITY_SPEED = 19.44  # braking profile changes when below this speed based on following dynamics below [m/s]
+CITY_SPEED = 16.66  # braking profile changes when below this speed based on following dynamics below [m/s]
 
 # City braking profile changes (makes the car brake harder because it wants to be farther from the lead car - increase to brake harder)
-ONE_BAR_PROFILE = [ONE_BAR_DISTANCE, 2.5]
-ONE_BAR_PROFILE_BP = [0, 2.75]
+ONE_BAR_PROFILE = [ONE_BAR_DISTANCE, 1.5]
+ONE_BAR_PROFILE_BP = [-0.3, 2.0]
 
-TWO_BAR_PROFILE = [TWO_BAR_DISTANCE, 2.5]
-TWO_BAR_PROFILE_BP = [0, 3.0]
+TWO_BAR_PROFILE = [TWO_BAR_DISTANCE, 2.0]
+TWO_BAR_PROFILE_BP = [-0.2, 2.25]
 
-THREE_BAR_PROFILE = [THREE_BAR_DISTANCE, 2.5]
-THREE_BAR_PROFILE_BP = [0.0, 4.0]
+THREE_BAR_PROFILE = [THREE_BAR_DISTANCE, 3.7]
+THREE_BAR_PROFILE_BP = [-0.1, 4.0]
 
 # Highway braking profiles
-H_ONE_BAR_PROFILE = [ONE_BAR_DISTANCE, ONE_BAR_DISTANCE+0.3]
-H_ONE_BAR_PROFILE_BP = [0.0, 2.5]
+H_ONE_BAR_PROFILE = [ONE_BAR_DISTANCE, ONE_BAR_DISTANCE+0.6]
+H_ONE_BAR_PROFILE_BP = [-0.2, 2.5]
 
 H_TWO_BAR_PROFILE = [TWO_BAR_DISTANCE, TWO_BAR_DISTANCE+0.2]
-H_TWO_BAR_PROFILE_BP = [0.0, 3.0]
+H_TWO_BAR_PROFILE_BP = [-0.15, 2.75]
 
 H_THREE_BAR_PROFILE = [THREE_BAR_DISTANCE, THREE_BAR_DISTANCE+0.1]
 H_THREE_BAR_PROFILE_BP = [0.0, 4.0]

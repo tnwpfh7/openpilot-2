@@ -159,12 +159,12 @@ class kegman_kans_conf():
                      "brakeStoppingTarget":"0.5", "tuneGernby":"1", "AutoHold":"1", "steerLimitTimer":"3.8", \
                      "Kp":"0.162", "Ki":"0.0144", "Kd":"0.072", "Kf":"0.000072", "liveParams":"1", "deadzone":"0.0", \
                      "1barBP0":"-0.3", "2barBP0":"-0.2", "3barBP0":"-0.1", \
-                     "1barBP1":"2.0", "2barBP1":"2.25", "3barBP1":"3.8", \
+                     "1barBP1":"2.0", "2barBP1":"2.25", "3barBP1":"4.0", \
                      "steerRatio":"15.07", "steerRateCost":"0.66", "steerActuatorDelay":"0.175", \
-                     "1barMax":"1.7", "2barMax":"2.0", "3barMax":"3.7", "STOPPING_DISTANCE":"1.0", \
+                     "1barMax":"1.5", "2barMax":"2.0", "3barMax":"3.7", "STOPPING_DISTANCE":"1.0", \
                      "ONE_BAR_DISTANCE":"0.8", "TWO_BAR_DISTANCE":"1.8", "THREE_BAR_DISTANCE":"3.6", \
-                     "1barHwy":"0.4", "2barHwy":"0.3", "3barHwy":"0.2", "nTune":"1", "useLiveSteerRatio":"1", \
-                     "sR_boost":"5.0", "sR_BP0":"0.72", "sR_BP1":"25", "sR_time":"7.0", \
+                     "1barHwy":"0.6", "2barHwy":"0.2", "3barHwy":"0.1", "nTune":"1", "useLiveSteerRatio":"1", \
+                     "sR_boost":"5.0", "sR_BP0":"1.44", "sR_BP1":"25", "sR_time":"7.0", \
                      "ALCnudgeLess":"1", "ALCminSpeed":"8.6", "ALCtimer":"0.5", "CruiseDelta":"5", \
                      "CruiseEnableMin":"15", "epsModded": "0", "slowOnCurves":"1"}
 
