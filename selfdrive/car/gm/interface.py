@@ -87,25 +87,34 @@ class CarInterface(CarInterfaceBase):
 
     if candidate == CAR.VOLT:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
-      ret.minEnableSpeed = 18 * CV.MPH_TO_MS
+      ret.minEnableSpeed = -1 * CV.MPH_TO_MS
       ret.mass = 1607. + STD_CARGO_KG
       ret.wheelbase = 2.69
-
-      ret.lateralTuning.init('pid')
+      ret.centerToFront = ret.wheelbase * 0.4  # wild guess
       ret.steerRatio = 15.07
-      rt = 0.36
+      ret.steerRateCost = 0.612
+      ret.steerActuatorDelay = 0.175
       ret.steerRatioRear = 0.
+      tire_stiffness_factor = 0.792  # not optimized yet
+# 'pid' parts
+      ret.lateralTuning.init('pid')
+      rt = 0.36
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.45*rt], [0.04*rt]]
       ret.lateralTuning.pid.kdBP = [0.]
       ret.lateralTuning.pid.kdV = [0.2*rt]  # corolla from shane fork : 0.725
       ret.lateralTuning.pid.kf = 0.0002*rt  # this number means 50kph(0.000000061082 base)
-      tire_stiffness_factor = 0.792  # not optimized yet
-      ret.steerRateCost = 0.612
-      ret.steerActuatorDelay = 0.18
-      ret.steerRateCost = 0.66
-      ret.steerActuatorDelay = 0.175
-      ret.centerToFront = ret.wheelbase * 0.4  # wild guess
+
+# 'indi'part
+#      ret.lateralTuning.init('indi')
+#      ret.lateralTuning.indi.innerLoopGainBP = [0.]
+#      ret.lateralTuning.indi.innerLoopGainV = [4.0]
+#      ret.lateralTuning.indi.outerLoopGainBP = [0.]
+#      ret.lateralTuning.indi.outerLoopGainV = [3.0]
+#      ret.lateralTuning.indi.timeConstantBP = [0.]
+#      ret.lateralTuning.indi.timeConstantV = [1.0]
+#      ret.lateralTuning.indi.actuatorEffectivenessBP = [0.]
+#      ret.lateralTuning.indi.actuatorEffectivenessV = [1.0]
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
@@ -158,15 +167,22 @@ class CarInterface(CarInterfaceBase):
     ret.tireStiffnessFront, ret.tireStiffnessRear = scale_tire_stiffness(ret.mass, ret.wheelbase, ret.centerToFront,
                                                                          tire_stiffness_factor=tire_stiffness_factor)
 
-    ret.longitudinalTuning.kpBP = [5., 35.]
-    ret.longitudinalTuning.kpV = [2.4, 1.5]
-    ret.longitudinalTuning.kiBP = [0.]
-    ret.longitudinalTuning.kiV = [0.36]
+#    ret.longitudinalTuning.kpBP = [5., 35.]
+#    ret.longitudinalTuning.kpV = [2.4, 1.5]
+#    ret.longitudinalTuning.kiBP = [0.]
+#    ret.longitudinalTuning.kiV = [0.36]
+# from Toyota values
+    ret.longitudinalTuning.deadzoneBP = [0., 8.05]
+    ret.longitudinalTuning.deadzoneV = [.0, .14]
+    ret.longitudinalTuning.kpBP = [0., 5., 20.]
+    ret.longitudinalTuning.kpV = [1.3, 1.0, 0.7]
+    ret.longitudinalTuning.kiBP = [0., 5., 12., 20., 27.]
+    ret.longitudinalTuning.kiV = [.35, .23, .20, .17, .1]
 
     ret.stoppingControl = True
     ret.startAccel = 0.8
 
-    ret.steerLimitTimer = 0.4
+    ret.steerLimitTimer = 3.4
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
 
     return ret
@@ -181,6 +197,7 @@ class CarInterface(CarInterfaceBase):
     ret.cruiseState.enabled = cruiseEnabled
 
     ret.readdistancelines = self.CS.follow_level
+    ret = self.CS.update(self.cp)	
 
     ret.canValid = self.cp.can_valid
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
