@@ -61,6 +61,10 @@ class HardwareBase:
     pass
 
   @abstractmethod
+  def get_ip_address(self):
+    pass
+
+  @abstractmethod
   def get_battery_capacity(self):
     pass
 
