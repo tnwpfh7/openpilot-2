@@ -29,6 +29,7 @@ def install_apk(path):
 def start_offroad():
   set_package_permissions()
   system("am start -n ai.comma.plus.offroad/.MainActivity")
+  pm_grant("com.neokii.openpilot", "android.permission.ACCESS_FINE_LOCATION")
   system("am startservice com.neokii.openpilot/.MainService")
   system("am startservice com.neokii.oproadlimit/.MainService")
 
