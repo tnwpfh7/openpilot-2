@@ -2,7 +2,7 @@ from common.numpy_fast import interp
 import numpy as np
 from selfdrive.hardware import EON, TICI
 from cereal import log
-
+from selfdrive.ntune import ntune_get
 
 TRAJECTORY_SIZE = 33
 # camera offset is meters from center car to camera
@@ -12,6 +12,7 @@ elif TICI:
   CAMERA_OFFSET = -0.04
 else:
   CAMERA_OFFSET = 0.0
+
 
 
 

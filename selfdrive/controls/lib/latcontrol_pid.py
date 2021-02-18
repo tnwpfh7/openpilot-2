@@ -2,6 +2,7 @@ from selfdrive.controls.lib.pid import LatPIDController
 from selfdrive.controls.lib.drive_helpers import get_steer_max
 from cereal import car
 from cereal import log
+# import common.steer_smoother as St_Smoother
 from common.numpy_fast import interp
 from selfdrive.kegman_kans_conf import kegman_kans_conf
 
@@ -22,12 +23,15 @@ class LatControlPID():
     self.angleBP = [10., 20., 25.0]
     self.angle_steer_new = 0.0
 
+#    self.Mid_Smoother = St_Smoother.Steer_Mid_Smoother()
+
   def reset(self):
     self.pid.reset()
 
   def live_tune(self, CP):
     self.mpc_frame += 1
     if self.mpc_frame % 300 == 0:
+      # live tuning through /data/openpilot/tune.py overrides interface.py settings
       self.kegman_kans = kegman_kans_conf()
       if self.kegman_kans.conf['tuneGernby'] == "1":
         self.steerKpV = [float(self.kegman_kans.conf['Kp'])]
@@ -54,6 +58,18 @@ class LatControlPID():
       output_steer = 0.0
       pid_log.active = False
       self.pid.reset()
+#      if CS.vEgo < 7.0: # ristrict to 25km
+#        self.angle_steers_des = self.Mid_Smoother.get_data( path_plan.angleSteers, 0.1)
+#      elif CS.vEgo < 15.0: # ristrict to 54km
+#        self.angle_steers_des = self.Mid_Smoother.get_data(path_plan.angleSteers, 0.25)
+#      elif CS.vEgo < 20.0: # ristrict to 72km
+#        self.angle_steers_des = self.Mid_Smoother.get_data(path_plan.angleSteers, 0.45)
+#      elif CS.vEgo < 25.0: # ristrict to 90km
+#        self.angle_steers_des = self.Mid_Smoother.get_data(path_plan.angleSteers, 0.6)
+#      elif CS.vEgo < 35.0: # ristrict to 125km
+#        self.angle_steers_des = self.Mid_Smoother.get_data(path_plan.angleSteers, 0.75)
+#      else:
+#        self.angle_steers_des = path_plan.angleSteers  # get from MPC/PathPlanner
     else:
       self.angle_steers_des = path_plan.angleSteers  # get from MPC/LateralPlanner
       self.angle_steer_new = interp(CS.vEgo, self.angleBP, self.angle_steer_rate)
