@@ -26,43 +26,43 @@ static void draw_home_button(UIState *s) {
 }
 
 static void draw_network_strength(UIState *s) {
-  static std::map<cereal::ThermalData::NetworkStrength, int> network_strength_map = {
-      {cereal::ThermalData::NetworkStrength::UNKNOWN, 1},
-      {cereal::ThermalData::NetworkStrength::POOR, 2},
-      {cereal::ThermalData::NetworkStrength::MODERATE, 3},
-      {cereal::ThermalData::NetworkStrength::GOOD, 4},
-      {cereal::ThermalData::NetworkStrength::GREAT, 5}};
-  const int img_idx = s->scene.thermal.getNetworkType() == cereal::ThermalData::NetworkType::NONE ? 0 : network_strength_map[s->scene.thermal.getNetworkStrength()];
+  static std::map<cereal::DeviceState::NetworkStrength, int> network_strength_map = {
+      {cereal::DeviceState::NetworkStrength::UNKNOWN, 1},
+      {cereal::DeviceState::NetworkStrength::POOR, 2},
+      {cereal::DeviceState::NetworkStrength::MODERATE, 3},
+      {cereal::DeviceState::NetworkStrength::GOOD, 4},
+      {cereal::DeviceState::NetworkStrength::GREAT, 5}};
+  const int img_idx = s->scene.deviceState.getNetworkType() == cereal::DeviceState::NetworkType::NONE ? 0 : network_strength_map[s->scene.deviceState.getNetworkStrength()];
   ui_draw_image(s, {58, 196, 176, 27}, util::string_format("network_%d", img_idx).c_str(), 1.0f);
 }
 
 static void draw_battery_icon(UIState *s) {
-  const char *battery_img = s->scene.thermal.getBatteryStatus() == "Charging" ? "battery_charging" : "battery";
+  const char *battery_img = s->scene.deviceState.getBatteryStatus() == "Charging" ? "battery_charging" : "battery";
   const Rect rect = {160, 255, 76, 36};
   ui_fill_rect(s->vg, {rect.x + 6, rect.y + 5,
-              int((rect.w - 19) * s->scene.thermal.getBatteryPercent() * 0.01), rect.h - 11}, COLOR_WHITE);
+              int((rect.w - 19) * s->scene.deviceState.getBatteryPercent() * 0.01), rect.h - 11}, COLOR_WHITE);
   ui_draw_image(s, rect, battery_img, 1.0f);
 }
 
 static void draw_network_type(UIState *s) {
-  static std::map<cereal::ThermalData::NetworkType, const char *> network_type_map = {
-      {cereal::ThermalData::NetworkType::NONE, "--"},
-      {cereal::ThermalData::NetworkType::WIFI, "WiFi"},
-      {cereal::ThermalData::NetworkType::CELL2_G, "2G"},
-      {cereal::ThermalData::NetworkType::CELL3_G, "3G"},
-      {cereal::ThermalData::NetworkType::CELL4_G, "4G"},
-      {cereal::ThermalData::NetworkType::CELL5_G, "5G"}};
+  static std::map<cereal::DeviceState::NetworkType, const char *> network_type_map = {
+      {cereal::DeviceState::NetworkType::NONE, "--"},
+      {cereal::DeviceState::NetworkType::WIFI, "WiFi"},
+      {cereal::DeviceState::NetworkType::CELL2_G, "2G"},
+      {cereal::DeviceState::NetworkType::CELL3_G, "3G"},
+      {cereal::DeviceState::NetworkType::CELL4_G, "4G"},
+      {cereal::DeviceState::NetworkType::CELL5_G, "5G"}};
   const int network_x = 50;
   const int network_y = 273;
   const int network_w = 100;
-  const char *network_type = network_type_map[s->scene.thermal.getNetworkType()];
+  const char *network_type = network_type_map[s->scene.deviceState.getNetworkType()];
   nvgFillColor(s->vg, COLOR_WHITE);
   nvgFontSize(s->vg, 48);
   nvgFontFace(s->vg, "sans-regular");
   nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
   nvgTextBox(s->vg, network_x, network_y, network_w, network_type ? network_type : "--", NULL);
 
-  std::string ip = s->scene.thermal.getWifiIpAddress();
+  std::string ip = s->scene.deviceState.getWifiIpAddress();
   nvgTextBox(s->vg, network_x, network_y + 40, 250, ip.c_str(), NULL);
 }
 
@@ -107,28 +107,28 @@ static void draw_metric(UIState *s, const char *label_str, const char *value_str
 }
 
 static void draw_temp_metric(UIState *s) {
-  static std::map<cereal::ThermalData::ThermalStatus, const int> temp_severity_map = {
-      {cereal::ThermalData::ThermalStatus::GREEN, 0},
-      {cereal::ThermalData::ThermalStatus::YELLOW, 1},
-      {cereal::ThermalData::ThermalStatus::RED, 2},
-      {cereal::ThermalData::ThermalStatus::DANGER, 3}};
-  std::string temp_val = std::to_string((int)s->scene.thermal.getAmbient()) + "°C";
-  draw_metric(s, "TEMP", temp_val.c_str(), temp_severity_map[s->scene.thermal.getThermalStatus()], 20, NULL);
+  static std::map<cereal::DeviceState::ThermalStatus, const int> temp_severity_map = {
+      {cereal::DeviceState::ThermalStatus::GREEN, 0},
+      {cereal::DeviceState::ThermalStatus::YELLOW, 1},
+      {cereal::DeviceState::ThermalStatus::RED, 2},
+      {cereal::DeviceState::ThermalStatus::DANGER, 3}};
+  std::string temp_val = std::to_string((int)s->scene.deviceState.getAmbientTempC()) + "°C";
+  draw_metric(s, "TEMP", temp_val.c_str(), temp_severity_map[s->scene.deviceState.getThermalStatus()], 20, NULL);
 }
 
 static void draw_panda_metric(UIState *s) {
   const int panda_y_offset = 30 + 148;
 
   int panda_severity = 0;
-  std::string panda_message = "판다\n연결됨";
-  if (s->scene.pandaType == cereal::HealthData::PandaType::UNKNOWN) {
+  std::string panda_message = "VEHICLE\nONLINE";
+  if (s->scene.pandaType == cereal::PandaState::PandaType::UNKNOWN) {
     panda_severity = 2;
-    panda_message = "판다\n연결안됨";
+    panda_message = "NO\nPANDA";
   }
 #ifdef QCOM2
   else if (s->started) {
     panda_severity = s->scene.gpsOK ? 0 : 1;
-    panda_message = util::string_format("위성수\n%d개", s->scene.satelliteCount);
+    panda_message = util::string_format("SAT CNT\n%d", s->scene.satelliteCount);
   }
 #endif
 

@@ -47,8 +47,8 @@ class CarState(CarStateBase):
     ret.vEgo, ret.aEgo = self.update_speed_kf(ret.vEgoRaw)
     ret.standstill = ret.vEgoRaw < 0.01
 
-    ret.steeringAngle = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelAngle']
-    ret.steeringRate = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelRate']
+    ret.steeringAngleDeg = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelAngle']
+    ret.steeringRateDeg = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelRate']
     ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL"]['PRNDL'], None))
     ret.brake = pt_cp.vl["EBCMBrakePedalPosition"]['BrakePedalPosition'] / 0xd0
     # Brake pedal's potentiometer returns near-zero reading even when pedal is not pressed.

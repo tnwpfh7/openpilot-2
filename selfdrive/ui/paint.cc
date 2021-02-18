@@ -264,7 +264,7 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
     char val_str[16];
     char uom_str[6];
     NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
-    snprintf(val_str, sizeof(val_str), "%.1f°", (round((s->scene.cpuTemp))));
+    snprintf(val_str, sizeof(val_str), "%.1f°", (round((s->scene.cpuTempC))));
     snprintf(uom_str, sizeof(uom_str), "%d%%", (s->scene.cpuUsagePercent));
     bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "CPU 온도",
         bb_rx, bb_ry, bb_uom_dx,
@@ -441,14 +441,14 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
     NVGcolor val_color = nvgRGBA(255, 255, 255, 255);
       //show Green if more than 30 degrees
       //show red if  more than 55 degrees
-      if(((int)(scene->lateral_plan.getAngleSteers()) < -30) || ((int)(scene->lateral_plan.getAngleSteers()) > 30)) {
+      if(((int)(scene->lateral_plan.getSteeringAngleDeg()) < -30) || ((int)(scene->lateral_plan.SteeringAngleDeg()) > 30)) {
         val_color = nvgRGBA(0, 255, 0, 255);
       }
-      if(((int)(scene->lateral_plan.getAngleSteers()) < -55) || ((int)(scene->lateral_plan.getAngleSteers()) > 55)) {
+      if(((int)(scene->lateral_plan.getSteeringAngleDeg()) < -55) || ((int)(scene->lateral_plan.getSteeringAngleDeg()) > 55)) {
         val_color = nvgRGBA(255, 0, 0, 255);
       }
       // steering is in degrees
-      snprintf(val_str, sizeof(val_str), "%.1f°",(scene->lateral_plan.getAngleSteers()));
+      snprintf(val_str, sizeof(val_str), "%.1f°",(scene->lateral_plan.getSteeringAngleDeg()));
 
       snprintf(uom_str, sizeof(uom_str), "");
     bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "현재조향각",
@@ -466,14 +466,14 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
     if (scene->controls_state.getEnabled()) {
       //show Green if more than 30 degrees
       //show red if  more than 12 degrees
-      if(((int)(s->scene.angleSteersDes) < -30) || ((int)(s->scene.angleSteersDes) > 30)) {
+      if(((int)(s->scene.steeringAngleDesiredDeg) < -30) || ((int)(s->scene.steeringAngleDesiredDeg) > 30)) {
         val_color = nvgRGBA(0, 255, 0, 255);
       }
-      if(((int)(s->scene.angleSteersDes) < -50) || ((int)(s->scene.angleSteersDes) > 50)) {
+      if(((int)(s->scene.steeringAngleDesiredDeg) < -50) || ((int)(s->scene.steeringAngleDesiredDeg) > 50)) {
         val_color = nvgRGBA(255, 0, 0, 255);
       }
       // steering is in degrees
-      snprintf(val_str, sizeof(val_str), "%.1f°",(s->scene.angleSteersDes));
+      snprintf(val_str, sizeof(val_str), "%.1f°",(s->scene.steeringAngleDesiredDeg));
     } else {
        snprintf(val_str, sizeof(val_str), "-");
     }

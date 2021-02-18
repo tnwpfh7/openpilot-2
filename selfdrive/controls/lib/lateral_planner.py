@@ -108,9 +108,9 @@ class LateralPlanner():
     v_ego = sm['carState'].vEgo
     active = sm['controlsState'].active
     # angle_offset = sm['liveParameters'].angleOffset
-    steering_wheel_angle_offset_deg = sm['liveParameters'].angleOffset
+    steering_wheel_angle_offset_deg = sm['liveParameters'].angleOffsetDeg
     # angle_steers = sm['carState'].steeringAngle
-    steering_wheel_angle_deg = sm['carState'].steeringAngle
+    steering_wheel_angle_deg = sm['carState'].steeringAngleDeg
 
     if self.steer_rate_cost_prev != ntune_get('steerRateCost'):
       self.steer_rate_cost_prev = ntune_get('steerRateCost')
@@ -309,9 +309,9 @@ class LateralPlanner():
     plan_send.lateralPlan.rProb = float(self.LP.rll_prob)
     plan_send.lateralPlan.dProb = float(self.LP.d_prob)
 
-    plan_send.lateralPlan.angleSteers = float(self.desired_steering_wheel_angle_deg)
-    plan_send.lateralPlan.rateSteers = float(self.desired_steering_wheel_angle_rate_deg)
-    plan_send.lateralPlan.angleOffset = float(sm['liveParameters'].angleOffset)
+    plan_send.lateralPlan.steeringAngleDeg = float(self.desired_steering_wheel_angle_deg)
+    plan_send.lateralPlan.steeringRateDeg = float(self.desired_steering_wheel_angle_rate_deg)
+    plan_send.lateralPlan.angleOffsetDeg = float(sm['liveParameters'].angleOffsetDeg)
     plan_send.lateralPlan.mpcSolutionValid = bool(plan_solution_valid)
 
     plan_send.lateralPlan.desire = self.desire
