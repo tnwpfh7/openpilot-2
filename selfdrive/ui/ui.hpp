@@ -117,7 +117,7 @@ typedef struct UIScene {
 
   float angleSteers;
   bool brakeLights;
-  float angleSteersDes;
+  float steeringAngleDesiredDeg;
   bool steerOverride;
   float output_scale;
   float steeringTorqueEps;
