@@ -72,10 +72,6 @@ class kegman_kans_conf():
         self.config.update({"STOPPING_DISTANCE":""})
         self.element_updated = True
 
-      if "deadzone" not in self.config:
-        self.config.update({"deadzone":""})
-        self.element_updated = True
-
       if "1barBP0" not in self.config:
         self.config.update({"1barBP0":""})
         self.config.update({"1barBP1":""})
@@ -141,10 +137,6 @@ class kegman_kans_conf():
         self.config.update({"CruiseEnableMin":""})
         self.element_updated = True
 
-      if "epsModded" not in self.config:
-        self.config.update({"epsModded":""})
-        self.element_updated = True
-
       if "accelerationMode" not in self.config:
         self.config.update({"accelerationMode":""})
         self.element_updated = True
@@ -157,7 +149,7 @@ class kegman_kans_conf():
       self.config = {"lastTrMode":"1", "battChargeMin":"60", "battChargeMax":"80", "wheelTouchSeconds":"18000", \
                      "accelerationMode":"0", "battPercOff":"85", "carVoltageMinEonShutdown":"12000", \
                      "brakeStoppingTarget":"0.5", "tuneGernby":"1", "AutoHold":"1", "steerLimitTimer":"3.8", \
-                     "Kp":"0.162", "Ki":"0.0144", "Kd":"0.072", "Kf":"0.000072", "liveParams":"1", "deadzone":"0.0", \
+                     "Kp":"0.625*0.36", "Ki":"0.125*0.36", "Kd":"0.001*0.36]", "Kf":"0.000225*0.36", "liveParams":"1", \
                      "1barBP0":"-0.3", "2barBP0":"-0.2", "3barBP0":"-0.1", \
                      "1barBP1":"2.0", "2barBP1":"2.25", "3barBP1":"4.0", \
                      "steerRatio":"15.07", "steerRateCost":"0.66", "steerActuatorDelay":"0.175", \
@@ -166,7 +158,7 @@ class kegman_kans_conf():
                      "1barHwy":"0.6", "2barHwy":"0.2", "3barHwy":"0.1", "nTune":"1", "useLiveSteerRatio":"1", \
                      "sR_boost":"5.0", "sR_BP0":"1.44", "sR_BP1":"25", "sR_time":"7.0", \
                      "ALCnudgeLess":"1", "ALCminSpeed":"8.6", "ALCtimer":"0.5", "CruiseDelta":"5", \
-                     "CruiseEnableMin":"15", "epsModded": "0", "slowOnCurves":"1"}
+                     "CruiseEnableMin":"15", "slowOnCurves":"1"}
 
 
       self.write_config(self.config)
