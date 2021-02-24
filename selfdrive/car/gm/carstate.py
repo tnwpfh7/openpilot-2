@@ -47,6 +47,7 @@ class CarState(CarStateBase):
     ret.standstill = ret.vEgoRaw < 0.01
 
     ret.steeringAngleDeg = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelAngle']
+    ret.steeringRateDeg = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelRate']
     ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL"]['PRNDL'], None))
     ret.brake = pt_cp.vl["EBCMBrakePedalPosition"]['BrakePedalPosition'] / 0xd0
     # Brake pedal's potentiometer returns near-zero reading even when pedal is not pressed.
@@ -126,6 +127,7 @@ class CarState(CarStateBase):
       ("CruiseState", "AcceleratorPedal2", 0),
       ("ACCButtons", "ASCMSteeringButton", CruiseButtons.UNPRESS),
       ("SteeringWheelAngle", "PSCMSteeringAngle", 0),
+      ("SteeringWheelRate", "PSCMSteeringAngle", 0),
       ("FLWheelSpd", "EBCMWheelSpdFront", 0),
       ("FRWheelSpd", "EBCMWheelSpdFront", 0),
       ("RLWheelSpd", "EBCMWheelSpdRear", 0),
@@ -139,6 +141,7 @@ class CarState(CarStateBase):
       ("LKAButton", "ASCMSteeringButton", 0),
       ("DistanceButton", "ASCMSteeringButton", 0),
       ("LKATorqueDelivered", "PSCMStatus", 0),
+      ("EngineRPM", "ECMEngineStatus", 0),
     ]
 
     if CP.carFingerprint == CAR.VOLT:
