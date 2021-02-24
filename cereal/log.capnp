@@ -283,6 +283,7 @@ struct DeviceState @0xa4d8b5af2aa492eb {
   offroadPowerUsageUwh @23 :UInt32;
   networkStrength @24 :NetworkStrength;
   carBatteryCapacityUwh @25 :UInt32;
+  wifiIpAddress @31 :Text;
 
   fanSpeedPercentDesired @10 :UInt16;
   started @11 :Bool;
@@ -488,6 +489,11 @@ struct ControlsState @0x97ff69c53601abf1 {
   longitudinalPlanMonoTime @28 :UInt64;
   lateralPlanMonoTime @50 :UInt64;
 
+  #Kegman 3Bar Distance Profile
+  vEgo @0 :Float32;
+  angleSteers @13 :Float32;
+  steerOverride @20 :Bool;
+
   state @31 :OpenpilotState;
   enabled @19 :Bool;
   active @36 :Bool;
@@ -517,6 +523,19 @@ struct ControlsState @0x97ff69c53601abf1 {
   cumLagMs @15 :Float32;
   canErrorCounter @57 :UInt32;
 
+  #Road Speed Limiter
+  roadLimitSpeed @58 :Int32;
+  roadLimitSpeedLeftDist @59 :Int32;
+
+  applyAccel @60 :Float32;
+  fusedAccel @61 :Float32;
+  leadDist @62 :Float32;
+  aReqValue @63 :Float32;
+  aReqValueMin @64 :Float32;
+  aReqValueMax @65 :Float32;
+
+  cluSpeedMs @66 :Float32;
+  
   lateralControlState :union {
     indiState @52 :LateralINDIState;
     pidState @53 :LateralPIDState;
@@ -586,7 +605,6 @@ struct ControlsState @0x97ff69c53601abf1 {
   }
 
   # deprecated
-  vEgoDEPRECATED @0 :Float32;
   vEgoRawDEPRECATED @32 :Float32;
   aEgoDEPRECATED @1 :Float32;
   canMonoTimeDEPRECATED @16 :UInt64;
@@ -608,11 +626,9 @@ struct ControlsState @0x97ff69c53601abf1 {
   decelForTurnDEPRECATED @47 :Bool;
   decelForModelDEPRECATED @54 :Bool;
   awarenessStatusDEPRECATED @26 :Float32;
-  angleSteersDEPRECATED @13 :Float32;
   vCurvatureDEPRECATED @46 :Float32;
   mapValidDEPRECATED @49 :Bool;
   jerkFactorDEPRECATED @12 :Float32;
-  steerOverrideDEPRECATED @20 :Bool;
 }
 
 struct ModelDataV2 {
@@ -642,7 +658,13 @@ struct ModelDataV2 {
 
   meta @12 :MetaData;
 
-  # All SI units and in device frame
+  #Slow on Curve
+  path @18 :PathData;
+
+  struct PathData {
+    poly @0 :List(Float32);
+  }
+
   struct XYZTData {
     x @0 :List(Float32);
     y @1 :List(Float32);
@@ -777,6 +799,11 @@ struct LateralPlan @0xe1e9318e2ae8b51e {
   desire @17 :Desire;
   laneChangeState @18 :LaneChangeState;
   laneChangeDirection @19 :LaneChangeDirection;
+
+  #Kegman 3Bar Distance Profile
+  steerRatio @22 :Float32;
+  steerRateCost @23 :Float32;
+  steerActuatorDelay @24 :Float32;
 
   enum Desire {
     none @0;
@@ -1204,6 +1231,8 @@ struct LiveParametersData {
   angleOffsetAverageDeg @3 :Float32;
   stiffnessFactor @4 :Float32;
   steerRatio @5 :Float32;
+  steerRateCost @10 :Float32;
+  steerActuatorDelay @11 :Float32;
   sensorValid @6 :Bool;
   yawRate @7 :Float32;
   posenetSpeed @8 :Float32;

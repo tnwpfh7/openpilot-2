@@ -42,7 +42,8 @@ static void ui_init_vision(UIState *s) {
 
 void ui_init(UIState *s) {
   s->sm = new SubMaster({"modelV2", "controlsState", "uiLayoutState", "liveCalibration", "radarState", "deviceState", "roadCameraState", "liveLocationKalman",
-                         "pandaState", "carParams", "driverState", "driverMonitoringState", "sensorEvents", "carState", "ubloxGnss"});
+                         "pandaState", "carParams", "driverState", "driverMonitoringState", "sensorEvents", "carState", "ubloxGnss",
+						 "carControl", "lateralPlan", "gpsLocationExternal", "liveParameters"});
 
   s->started = false;
   s->status = STATUS_OFFROAD;
@@ -182,6 +183,7 @@ static void update_sockets(UIState *s) {
   }
   if (sm.updated("carParams")) {
     s->longitudinal_control = sm["carParams"].getCarParams().getOpenpilotLongitudinalControl();
+    scene.car_params = sm["carParams"].getCarParams();	
   }
   if (sm.updated("driverState")) {
     scene.driver_state = sm["driverState"].getDriverState();
@@ -317,9 +319,28 @@ static void update_status(UIState *s) {
   started_prev = s->started;
 }
 
+static void update_extras(UIState *s)
+{
+   UIScene &scene = s->scene;
+   SubMaster &sm = *(s->sm);
+
+   if(sm.updated("carControl"))
+    scene.car_control = sm["carControl"].getCarControl();
+
+   if(sm.updated("lateralPlan"))
+    scene.lateral_plan = sm["lateralPlan"].getLateralPlan();
+
+   if(sm.updated("gpsLocationExternal"))
+    scene.gps_ext = sm["gpsLocationExternal"].getGpsLocationExternal();
+
+   if(sm.updated("liveParameters"))
+    scene.live_params = sm["liveParameters"].getLiveParameters();
+}
+
 void ui_update(UIState *s) {
   update_params(s);
   update_sockets(s);
+  update_extras(s);
   update_status(s);
   update_alert(s);
   update_vision(s);

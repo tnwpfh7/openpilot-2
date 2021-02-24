@@ -13,6 +13,7 @@
 #include "ui.hpp"
 #include "paint.hpp"
 #include "android/sl_sound.hpp"
+#include "dashcam.h"
 
 ExitHandler do_exit;
 static void ui_set_brightness(UIState *s, int brightness) {
@@ -151,6 +152,15 @@ int main(int argc, char* argv[]) {
     // poll for touch events
     int touch_x = -1, touch_y = -1;
     int touched = touch_poll(&touch, &touch_x, &touch_y, 0);
+
+    if(s->awake)
+    {
+#if UI_FEATURE_DASHCAM
+        if(dashcam(s, touch_x, touch_y))
+            touched = 0;
+#endif
+    }
+
     if (touched == 1) {
       handle_sidebar_touch(s, touch_x, touch_y);
       handle_vision_touch(s, touch_x, touch_y);
