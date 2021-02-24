@@ -1,12 +1,16 @@
 from common.numpy_fast import clip, interp
 from selfdrive.config import Conversions as CV
+from selfdrive.kegman_kans_conf import kegman_kans_conf
 from cereal import car
 
 # kph
-V_CRUISE_MAX = 135
+kegman_kans = kegman_kans_conf()
+V_CRUISE_MAX = 144
 V_CRUISE_MIN = 8
-V_CRUISE_DELTA = 8
-V_CRUISE_ENABLE_MIN = 40
+V_CRUISE_DELTA = int(kegman_kans.conf['CruiseDelta'])
+V_CRUISE_ENABLE_MIN = int(kegman_kans.conf['CruiseEnableMin'])
+clip(V_CRUISE_DELTA, 2, 16)
+clip(V_CRUISE_ENABLE_MIN, 1, 80)
 MPC_N = 16
 CAR_ROTATION_RADIUS = 0.0
 

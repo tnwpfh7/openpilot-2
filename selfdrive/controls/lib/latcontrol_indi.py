@@ -7,6 +7,7 @@ from common.numpy_fast import clip, interp
 from selfdrive.car.toyota.values import CarControllerParams
 from selfdrive.car import apply_toyota_steer_torque_limits
 from selfdrive.controls.lib.drive_helpers import get_steer_max
+from selfdrive.ntune import nTune
 
 
 class LatControlINDI():
@@ -45,6 +46,7 @@ class LatControlINDI():
     self.sat_limit = CP.steerLimitTimer
 
     self.reset()
+    self.tune = nTune(CP, self)
 
   @property
   def RC(self):
@@ -81,6 +83,7 @@ class LatControlINDI():
     return self.sat_count > self.sat_limit
 
   def update(self, active, CS, CP, lat_plan):
+    self.tune.check()
     self.speed = CS.vEgo
     # Update Kalman filter
     y = np.array([[math.radians(CS.steeringAngleDeg)], [math.radians(CS.steeringRateDeg)]])
