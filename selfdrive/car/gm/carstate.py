@@ -71,7 +71,8 @@ class CarState(CarStateBase):
     ret.brakePressed = ret.brake > 1e-5
     # Regen braking is braking
     if self.car_fingerprint == CAR.VOLT:
-      ret.brakePressed = ret.brakePressed or bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
+      self.regenPaddlePressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
+      ret.brakePressed = ret.brakePressed or self.regenPaddlePressed
 
     ret.cruiseState.enabled = self.pcm_acc_status != AccState.OFF
     ret.cruiseState.standstill = self.pcm_acc_status == AccState.STANDSTILL
@@ -81,6 +82,9 @@ class CarState(CarStateBase):
     ret.steerWarning = self.lkas_status not in [0, 1]
 
     ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]['LKATorqueDelivered']
+    #added bellow line for brakeLights by neokii
+    ret.brakeLights = ch_cp.vl["EBCMFrictionBrakeStatus"]["FrictionBrakePressure"] != 0 or ret.brakePressed
+
     return ret
 
 
@@ -126,3 +130,14 @@ class CarState(CarStateBase):
       ]
 
     return CANParser(DBC[CP.carFingerprint]['pt'], signals, [], CanBus.POWERTRAIN)
+
+# bellows are for brakeLights
+  @staticmethod
+  def get_chassis_can_parser(CP):
+    # this function generates lists for signal, messages and initial values
+    signals = [
+      # sig_name, sig_address, default
+      ("FrictionBrakePressure", "EBCMFrictionBrakeStatus", 0),
+    ]
+
+    return CANParser(DBC[CP.carFingerprint]['chassis'], signals, [], CanBus.CHASSIS)

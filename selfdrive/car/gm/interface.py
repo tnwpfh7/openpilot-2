@@ -156,8 +156,9 @@ class CarInterface(CarInterfaceBase):
   # returns a car.CarState
   def update(self, c, can_strings):
     self.cp.update_strings(can_strings)
+    self.cp_chassis.update_strings(can_strings) ##this line for brakeLights
 
-    ret = self.CS.update(self.cp)
+    ret = self.CS.update(self.cp, self.cp_chassis) ##this line for brakeLights
 
     cruiseEnabled = self.CS.pcm_acc_status != AccState.OFF
     ret.cruiseState.enabled = cruiseEnabled
