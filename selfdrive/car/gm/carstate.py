@@ -6,7 +6,8 @@ from opendbc.can.parser import CANParser
 from selfdrive.car.interfaces import CarStateBase
 from selfdrive.car.gm.values import DBC, CAR, AccState, CanBus, \
                                     CruiseButtons, STEER_THRESHOLD
-
+from selfdrive.kegman_kans_conf import kegman_kans_conf
+kegman_kans = kegman_kans_conf()
 
 class CarState(CarStateBase):
   def __init__(self, CP):
@@ -20,7 +21,13 @@ class CarState(CarStateBase):
     self.distance_button = 0
     self.follow_level = 2
     self.lkMode = True
+    self.autoHold = False
+    self.autoHoldActive = False
+    self.autoHoldActivated = False
     self.regenPaddlePressed = 0
+    self.cruiseMain = False
+    self.engineRPM = 0
+
   def update(self, pt_cp, ch_cp): #ch_cp is for brakeLights
     ret = car.CarState.new_message()
 
@@ -65,6 +72,7 @@ class CarState(CarStateBase):
 
     self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
     ret.cruiseState.available = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
+    self.cruiseMain = ret.cruiseState.available
     ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
     self.pcm_acc_status = pt_cp.vl["AcceleratorPedal2"]['CruiseState']
 
@@ -82,6 +90,15 @@ class CarState(CarStateBase):
     ret.steerWarning = self.lkas_status not in [0, 1]
 
     ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]['LKATorqueDelivered']
+    self.engineRPM = pt_cp.vl["ECMEngineStatus"]['EngineRPM']
+
+    if kegman_kans.conf['AutoHold'] == "1":
+      self.autoHold = True
+    else:
+      self.autoHold = False
+
+    ret.autoHoldActivated = self.autoHoldActivated
+
     #added bellow line for brakeLights by neokii
     ret.brakeLights = ch_cp.vl["EBCMFrictionBrakeStatus"]["FrictionBrakePressure"] != 0 or ret.brakePressed
 
