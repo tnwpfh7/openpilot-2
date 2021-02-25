@@ -538,15 +538,6 @@ class Controls:
     controlsState.roadLimitSpeed = self.road_limit_speed
     controlsState.roadLimitSpeedLeftDist = self.road_limit_left_dist
 
-    controlsState.angleSteers = steer_angle_rad * CV.RAD_TO_DEG
-    controlsState.cluSpeedMs = self.clu_speed_ms
-    controlsState.applyAccel = self.apply_accel
-    controlsState.fusedAccel = self.fused_accel
-    controlsState.leadDist = self.lead_drel
-    controlsState.aReqValue = self.aReqValue
-    controlsState.aReqValueMin = self.aReqValueMin
-    controlsState.aReqValueMax = self.aReqValueMax
-
     if self.CP.lateralTuning.which() == 'pid':
       controlsState.lateralControlState.pidState = lac_log
     elif self.CP.lateralTuning.which() == 'lqr':

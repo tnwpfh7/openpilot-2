@@ -590,14 +590,6 @@ static void bb_ui_draw_debug(UIState *s)
 
     const int text_x = s->viz_rect.centerX() + s->viz_rect.w * 10 / 55;
 
-    float applyAccel = scene->controls_state.getApplyAccel();
-    float fusedAccel = scene->controls_state.getFusedAccel();
-    float leadDist = scene->controls_state.getLeadDist();
-
-    float aReqValue = scene->controls_state.getAReqValue();
-    float aReqValueMin = scene->controls_state.getAReqValueMin();
-    float aReqValueMax = scene->controls_state.getAReqValueMax();
-
     int longControlState = (int)scene->controls_state.getLongControlState();
     float vPid = scene->controls_state.getVPid();
     float upAccelCmd = scene->controls_state.getUpAccelCmd();
@@ -632,18 +624,6 @@ static void bb_ui_draw_debug(UIState *s)
 
     y += height;
     snprintf(str, sizeof(str), "Gas: %.3f, Brake: %.3f", gas, brake);
-    ui_draw_text(s, text_x, y, str, 25 * 2.5, textColor, "sans-regular");
-
-    y += height;
-    snprintf(str, sizeof(str), "LeadDist: %.3f", leadDist);
-    ui_draw_text(s, text_x, y, str, 25 * 2.5, textColor, "sans-regular");
-
-    y += height;
-    snprintf(str, sizeof(str), "Accel: %.3f/%.3f/%.3f", applyAccel, fusedAccel, aReqValue);
-    ui_draw_text(s, text_x, y, str, 25 * 2.5, textColor, "sans-regular");
-
-    y += height;
-    snprintf(str, sizeof(str), "%.3f (%.3f/%.3f)", aReqValue, aReqValueMin, aReqValueMax);
     ui_draw_text(s, text_x, y, str, 25 * 2.5, textColor, "sans-regular");
 
     //y += height;
