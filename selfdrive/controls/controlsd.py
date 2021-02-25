@@ -537,6 +537,7 @@ class Controls:
 
     controlsState.roadLimitSpeed = self.road_limit_speed
     controlsState.roadLimitSpeedLeftDist = self.road_limit_left_dist
+    controlsState.angleSteers = steer_angle_rad * CV.RAD_TO_DEG
 
     if self.CP.lateralTuning.which() == 'pid':
       controlsState.lateralControlState.pidState = lac_log
