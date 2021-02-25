@@ -491,7 +491,6 @@ struct ControlsState @0x97ff69c53601abf1 {
 
   #Kegman 3Bar Distance Profile
   vEgo @0 :Float32;
-  angleSteers @13 :Float32;
   steerOverride @20 :Bool;
 
   state @31 :OpenpilotState;
@@ -527,14 +526,14 @@ struct ControlsState @0x97ff69c53601abf1 {
   roadLimitSpeed @58 :Int32;
   roadLimitSpeedLeftDist @59 :Int32;
 
+  angleSteers @13 :Float32;
+  cluSpeedMs @66 :Float32;
   applyAccel @60 :Float32;
   fusedAccel @61 :Float32;
   leadDist @62 :Float32;
   aReqValue @63 :Float32;
   aReqValueMin @64 :Float32;
   aReqValueMax @65 :Float32;
-
-  cluSpeedMs @66 :Float32;
   
   lateralControlState :union {
     indiState @52 :LateralINDIState;
