@@ -608,6 +608,7 @@ struct ControlsState @0x97ff69c53601abf1 {
   aTargetMinDEPRECATED @10 :Float32;
   aTargetMaxDEPRECATED @11 :Float32;
   rearViewCamDEPRECATED @23 :Bool;
+  vEgoDEPRECATED @13 :Float32;
   driverMonitoringOnDEPRECATED @43 :Bool;
   hudLeadDEPRECATED @14 :Int32;
   alertSoundDEPRECATED @45 :Text;
