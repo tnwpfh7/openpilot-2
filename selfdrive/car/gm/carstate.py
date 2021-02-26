@@ -90,7 +90,7 @@ class CarState(CarStateBase):
     ret.steerWarning = self.lkas_status not in [0, 1]
 
     ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]['LKATorqueDelivered']
-    self.engineRPM = pt_cp.vl["ECMEngineStatus"]['EngineRPM']
+#    self.engineRPM = pt_cp.vl["ECMEngineStatus"]['EngineRPM']
 
     if kegman_kans.conf['AutoHold'] == "1":
       self.autoHold = True

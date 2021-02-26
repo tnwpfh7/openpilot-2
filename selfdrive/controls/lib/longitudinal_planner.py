@@ -17,6 +17,7 @@ from selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX
 from selfdrive.ntune import ntune_get
 from selfdrive.kegman_kans_conf import kegman_kans_conf
 kegman_kans = kegman_kans_conf()
+from selfdrive.ntune import ntune_get
 
 LON_MPC_STEP = 0.2  # first step is 0.2s
 AWARENESS_DECEL = -0.2     # car smoothly decel at .2m/s^2 when user is distracted
