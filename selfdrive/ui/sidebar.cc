@@ -113,7 +113,7 @@ static void draw_temp_metric(UIState *s) {
       {cereal::DeviceState::ThermalStatus::RED, 2},
       {cereal::DeviceState::ThermalStatus::DANGER, 3}};
   std::string temp_val = std::to_string((int)s->scene.deviceState.getAmbientTempC()) + "°C";
-  draw_metric(s, "TEMP", temp_val.c_str(), temp_severity_map[s->scene.deviceState.getThermalStatus()], 20, NULL);
+  draw_metric(s, "온도", temp_val.c_str(), temp_severity_map[s->scene.deviceState.getThermalStatus()], 20, NULL);
 }
 
 static void draw_panda_metric(UIState *s) {

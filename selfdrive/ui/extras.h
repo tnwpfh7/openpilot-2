@@ -13,7 +13,7 @@ static void ui_draw_extras_limit_speed(UIState *s)
     {
         int w = 200;
         int h = 200;
-        int x = (s->viz_rect.x + (bdr_s*2)) + 300;
+        int x = (s->viz_rect.x + (bdr_s*2))+300;
         int y = 80;
         char str[32];
 

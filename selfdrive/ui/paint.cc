@@ -625,27 +625,6 @@ static void bb_ui_draw_debug(UIState *s)
     y += height;
     snprintf(str, sizeof(str), "Gas: %.3f, Brake: %.3f", gas, brake);
     ui_draw_text(s, text_x, y, str, 25 * 2.5, textColor, "sans-regular");
-
-    //y += height;
-    //snprintf(str, sizeof(str), "Angle: %.3f, %.3f", scene->liveParams.getAngleOffset(),
-    //        scene->liveParams.getAngleOffsetAverage());
-    //ui_draw_text(s, text_x, y, str, 22 * 2.5, COLOR_WHITE_ALPHA(200), s->font_sans_regular);
-
-    /*y += height;
-    snprintf(str, sizeof(str), "S Rate: %.2f", scene->lateral_plan.getSteerRatio());
-    ui_draw_text(s, text_x, y, str, 22 * 2.5, COLOR_WHITE_ALPHA(200), s->font_sans_regular);
-
-    y += height;
-    snprintf(str, sizeof(str), "S R Cost: %.2f", scene->lateral_plan.getSteerRateCost());
-    ui_draw_text(s, text_x, y, str, 22 * 2.5, COLOR_WHITE_ALPHA(200), s->font_sans_regular);
-
-    y += height;
-    snprintf(str, sizeof(str), "S A Delay: %.2f", scene->lateral_plan.getSteerActuatorDelay());
-    ui_draw_text(s, text_x, y, str, 22 * 2.5, COLOR_WHITE_ALPHA(200), s->font_sans_regular);
-
-    y += height;
-    snprintf(str, sizeof(str), "Lane: %.2f, %.2f", scene->lateral_plan.getLProb(), scene->lateral_plan.getRProb());
-    ui_draw_text(s, text_x, y, str, 22 * 2.5, COLOR_WHITE_ALPHA(200), s->font_sans_regular);*/
 }
 
 

@@ -155,10 +155,8 @@ int main(int argc, char* argv[]) {
 
     if(s->awake)
     {
-#if UI_FEATURE_DASHCAM
         if(dashcam(s, touch_x, touch_y))
             touched = 0;
-#endif
     }
 
     if (touched == 1) {

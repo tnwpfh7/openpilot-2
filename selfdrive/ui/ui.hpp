@@ -61,7 +61,7 @@ const int footer_h = 280;
 const Rect settings_btn = {50, 35, 200, 117};
 const Rect home_btn = {60, 1080 - 180 - 40, 180, 180};
 
-const int UI_FREQ = 20;   // Hz
+const int UI_FREQ = 20; // Hz
 
 typedef enum NetStatus {
   NET_CONNECTED,
