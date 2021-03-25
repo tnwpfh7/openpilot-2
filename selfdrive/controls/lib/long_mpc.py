@@ -15,7 +15,7 @@ kegman_kans = kegman_kans_conf()
 if "ONE_BAR_DISTANCE" in kegman_kans.conf:
     ONE_BAR_DISTANCE = float(kegman_kans.conf['ONE_BAR_DISTANCE'])
 else:
-    ONE_BAR_DISTANCE = 0.8  # in seconds
+    ONE_BAR_DISTANCE = 0.9  # in seconds
 if "TWO_BAR_DISTANCE" in kegman_kans.conf:
     TWO_BAR_DISTANCE = float(kegman_kans.conf['TWO_BAR_DISTANCE'])
 else:

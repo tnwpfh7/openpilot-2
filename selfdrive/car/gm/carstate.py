@@ -28,7 +28,7 @@ class CarState(CarStateBase):
     self.cruiseMain = False
     self.engineRPM = 0
 
-  def update(self, pt_cp, ch_cp): #ch_cp is for brakeLights
+  def update(self, pt_cp, ch_cp): # ch_cp is for brakeLights
     ret = car.CarState.new_message()
 
     self.prev_cruise_buttons = self.cruise_buttons

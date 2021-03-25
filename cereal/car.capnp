@@ -188,7 +188,7 @@ struct CarState {
   # clutch (manual transmission only)
   clutchPressed @28 :Bool;
 
-  # Kegman 3Bar Distance Profile
+  #Kegman 3Bar Distance Profile
   readdistancelines @37 :Float32;
   lkMode @38 :Bool;
   engineRPM @39 :Float32;
@@ -200,6 +200,7 @@ struct CarState {
   leftBlindspot @33 :Bool; # Is there something blocking the left lane change
   rightBlindspot @34 :Bool; # Is there something blocking the right lane change
 
+  # Autohold for GM
   autoHoldActivated @40 :Bool;
 
   struct WheelSpeeds {

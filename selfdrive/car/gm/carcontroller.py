@@ -65,7 +65,7 @@ class CarController():
 
       # From bellow line, Auto Hold State
       if CS.cruiseMain and not enabled and CS.autoHold and CS.autoHoldActive and not CS.out.gasPressed and CS.out.gearShifter == 'drive' and CS.out.vEgo < 0.01 and not CS.regenPaddlePressed:
-        # Auto Hold State
+        # AutoHold State
         car_stopping = apply_gas < P.ZERO_GAS
         standstill = CS.pcm_acc_status == AccState.STANDSTILL
 

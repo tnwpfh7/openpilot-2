@@ -6,7 +6,7 @@ from cereal import car
 # kph
 kegman_kans = kegman_kans_conf()
 V_CRUISE_MAX = 144
-V_CRUISE_MIN = 8
+V_CRUISE_MIN = 7
 V_CRUISE_DELTA = int(kegman_kans.conf['CruiseDelta'])
 V_CRUISE_ENABLE_MIN = int(kegman_kans.conf['CruiseEnableMin'])
 clip(V_CRUISE_DELTA, 2, 16)

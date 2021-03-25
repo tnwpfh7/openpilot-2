@@ -749,6 +749,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., .2),
     ET.NO_ENTRY: NoEntryAlert("Cruise Fault: Restart the Car"),
   },
+
   EventName.autoHoldActivated: {
     ET.PERMANENT: Alert(
       "AutoHold Activated",

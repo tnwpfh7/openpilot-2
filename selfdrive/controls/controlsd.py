@@ -24,7 +24,7 @@ from selfdrive.locationd.calibrationd import Calibration
 from selfdrive.hardware import HARDWARE, TICI
 from selfdrive.ntune import ntune_get
 
-LDW_MIN_SPEED = 31 * CV.MPH_TO_MS
+LDW_MIN_SPEED = 35 * CV.MPH_TO_MS
 LANE_DEPARTURE_THRESHOLD = 0.1
 STEER_ANGLE_SATURATION_TIMEOUT = 1.0 / DT_CTRL
 STEER_ANGLE_SATURATION_THRESHOLD = 2.5  # Degrees
