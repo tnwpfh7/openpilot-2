@@ -7,22 +7,16 @@
 #include "sidebar.hpp"
 
 static void draw_background(UIState *s) {
-#ifdef QCOM
-  const NVGcolor color = COLOR_BLACK_ALPHA(85);
-#else
   const NVGcolor color = nvgRGBA(0x39, 0x39, 0x39, 0xff);
-#endif
   ui_fill_rect(s->vg, {0, 0, sbr_w, s->fb_h}, color);
 }
 
 static void draw_settings_button(UIState *s) {
-  const float alpha = s->active_app == cereal::UiLayoutState::App::SETTINGS ? 1.0f : 0.65f;
-  ui_draw_image(s, settings_btn, "button_settings", alpha);
+  ui_draw_image(s, settings_btn, "button_settings", 0.65f);
 }
 
 static void draw_home_button(UIState *s) {
-  const float alpha = s->active_app == cereal::UiLayoutState::App::HOME ? 1.0f : 0.65f;
-  ui_draw_image(s, home_btn, "button_home", alpha);
+  ui_draw_image(s, home_btn, "button_home", 1.0f);
 }
 
 static void draw_network_strength(UIState *s) {
@@ -63,7 +57,7 @@ static void draw_network_type(UIState *s) {
   nvgTextBox(s->vg, network_x, network_y, network_w, network_type ? network_type : "--", NULL);
 
   std::string ip = s->scene.deviceState.getWifiIpAddress();
-  nvgTextBox(s->vg, network_x, network_y + 50, 250, ip.c_str(), NULL);
+  nvgTextBox(s->vg, network_x-20, network_y + 60, 250, ip.c_str(), NULL);
 }
 
 static void draw_metric(UIState *s, const char *label_str, const char *value_str, const int severity, const int y_offset, const char *message_str) {
@@ -77,7 +71,7 @@ static void draw_metric(UIState *s, const char *label_str, const char *value_str
     status_color = COLOR_RED;
   }
 
-  const Rect rect = {30, 338 + y_offset, 240, message_str ? strchr(message_str, '\n') ? 130 : 130 : 130};
+  const Rect rect = {30, 350 + y_offset, 240, message_str ? strchr(message_str, '\n') ? 130 : 130 : 130};
   ui_draw_rect(s->vg, rect, severity > 0 ? COLOR_WHITE : COLOR_WHITE_ALPHA(85), 2, 20.);
 
   nvgBeginPath(s->vg);
@@ -113,7 +107,7 @@ static void draw_temp_metric(UIState *s) {
       {cereal::DeviceState::ThermalStatus::RED, 2},
       {cereal::DeviceState::ThermalStatus::DANGER, 3}};
   std::string temp_val = std::to_string((int)s->scene.deviceState.getAmbientTempC()) + "°C";
-  draw_metric(s, "온도", temp_val.c_str(), temp_severity_map[s->scene.deviceState.getThermalStatus()], 20, NULL);
+  draw_metric(s, "TEMP", temp_val.c_str(), temp_severity_map[s->scene.deviceState.getThermalStatus()], 20, NULL);
 }
 
 static void draw_panda_metric(UIState *s) {
@@ -126,7 +120,7 @@ static void draw_panda_metric(UIState *s) {
     panda_message = "NO\nPANDA";
   }
 #ifdef QCOM2
-  else if (s->started) {
+  else if (s->scene.started) {
     panda_severity = s->scene.gpsOK ? 0 : 1;
     panda_message = util::string_format("SAT CNT\n%d", s->scene.satelliteCount);
   }

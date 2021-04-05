@@ -35,7 +35,7 @@ class CarController():
     if (frame % P.STEER_STEP) == 0:
       lkas_enabled = enabled and not CS.out.steerWarning and CS.lkMode and CS.out.vEgo > P.MIN_STEER_SPEED
       if lkas_enabled:
-        new_steer = actuators.steer * P.STEER_MAX
+        new_steer = int(round(actuators.steer * P.STEER_MAX))
         apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, P)
         self.steer_rate_limited = new_steer != apply_steer
       else:
@@ -62,10 +62,8 @@ class CarController():
     # Gas/regen and brakes - all at 25Hz
     if (frame % 4) == 0:
       idx = (frame // 4) % 4
-
-      # From bellow line, Auto Hold State
       if CS.cruiseMain and not enabled and CS.autoHold and CS.autoHoldActive and not CS.out.gasPressed and CS.out.gearShifter == 'drive' and CS.out.vEgo < 0.01 and not CS.regenPaddlePressed:
-        # AutoHold State
+        # Auto Hold State
         car_stopping = apply_gas < P.ZERO_GAS
         standstill = CS.pcm_acc_status == AccState.STANDSTILL
 
@@ -85,10 +83,13 @@ class CarController():
 
         # Auto-resume from full stop by resetting ACC control
         acc_enabled = enabled
-
+      
         if standstill and not car_stopping:
           acc_enabled = False
+      
         can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, apply_gas, idx, acc_enabled, at_full_stop))
+
+   
 
     follow_level = CS.get_follow_level()
 

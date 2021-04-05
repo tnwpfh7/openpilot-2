@@ -31,12 +31,12 @@ else:
 if "STOPPING_DISTANCE" in kegman_kans.conf:
     STOPPING_DISTANCE = float(kegman_kans.conf['STOPPING_DISTANCE'])
 else:
-    STOPPING_DISTANCE = 1.5  # distance between you and lead car when you come to stop
+    STOPPING_DISTANCE = 1  # distance between you and lead car when you come to stop
 
 TR = TWO_BAR_DISTANCE  # default interval
 
-# Variables that change braking profiles
-CITY_SPEED = 18.05  # braking profile changes when below this speed based on following dynamics below [m/s]
+ # Variables that change braking profiles
+CITY_SPEED = 16.44  # braking profile changes when below this speed based on following dynamics below [m/s]
 
 # City braking profile changes (makes the car brake harder because it wants to be farther from the lead car - increase to brake harder)
 ONE_BAR_PROFILE = [ONE_BAR_DISTANCE, 1.3]
@@ -45,8 +45,8 @@ ONE_BAR_PROFILE_BP = [-0.2, 2.0]
 TWO_BAR_PROFILE = [TWO_BAR_DISTANCE, 2.0]
 TWO_BAR_PROFILE_BP = [-0.2, 2.25]
 
-THREE_BAR_PROFILE = [THREE_BAR_DISTANCE, 3.7]
-THREE_BAR_PROFILE_BP = [-0.1, 3.8]
+THREE_BAR_PROFILE = [THREE_BAR_DISTANCE, 3.65]
+THREE_BAR_PROFILE_BP = [-0.1, 4.0]
 
 # Highway braking profiles
 H_ONE_BAR_PROFILE = [ONE_BAR_DISTANCE, ONE_BAR_DISTANCE+0.5]
@@ -82,12 +82,12 @@ class LongitudinalMpc():
     self.new_lead = False
     self.v_rel = 0.0
     self.lastTR = 2
-    self.v_rel = 10
-
     self.last_cloudlog_t = 0.0
-    self.n_its = 0
-    self.duration = 0
-    self.bp_counter = 0
+    self.v_rel = 10
+    self.last_cloudlog_t = 0.0
+    
+    self.bp_counter = 0  
+
 
     kegman_kans = kegman_kans_conf()
     self.oneBarBP = [float(kegman_kans.conf['1barBP0']), float(kegman_kans.conf['1barBP1'])]
@@ -99,13 +99,14 @@ class LongitudinalMpc():
     self.oneBarHwy = [ONE_BAR_DISTANCE, ONE_BAR_DISTANCE+float(kegman_kans.conf['1barHwy'])]
     self.twoBarHwy = [TWO_BAR_DISTANCE, TWO_BAR_DISTANCE+float(kegman_kans.conf['2barHwy'])]
     self.threeBarHwy = [THREE_BAR_DISTANCE, THREE_BAR_DISTANCE+float(kegman_kans.conf['3barHwy'])]
+    
+    self.n_its = 0
+    self.duration = 0
 
   def publish(self, pm):
     if LOG_MPC:
       qp_iterations = max(0, self.n_its)
-      dat = messaging.new_message()
-      dat.init('liveLongitudinalMpc')
-
+      dat = messaging.new_message('liveLongitudinalMpc')
       dat.liveLongitudinalMpc.xEgo = list(self.mpc_solution[0].x_ego)
       dat.liveLongitudinalMpc.vEgo = list(self.mpc_solution[0].v_ego)
       dat.liveLongitudinalMpc.aEgo = list(self.mpc_solution[0].a_ego)
@@ -170,7 +171,7 @@ class LongitudinalMpc():
     # Calculate conditions
     self.v_rel = v_lead - v_ego   # calculate relative velocity vs lead car
 
-
+   
     # Is the car running surface street speeds?
     if v_ego < CITY_SPEED:
       self.street_speed = 1
@@ -236,10 +237,13 @@ class LongitudinalMpc():
      TR = TWO_BAR_DISTANCE # if readdistancelines != 1,2,3,4
      self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
 
-
+    
     t = sec_since_boot()
     self.n_its = self.libmpc.run_mpc(self.cur_state, self.mpc_solution, self.a_lead_tau, a_lead, TR)
     self.duration = int((sec_since_boot() - t) * 1e9)
+
+    if LOG_MPC:
+      self.send_mpc_solution(pm, n_its, duration)
 
     # Get solution. MPC timestep is 0.2 s, so interpolation to 0.05 s is needed
     self.v_mpc = self.mpc_solution[0].v_ego[1]

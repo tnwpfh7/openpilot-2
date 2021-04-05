@@ -14,7 +14,7 @@ class CarState(CarStateBase):
     super().__init__(CP)
     can_define = CANDefine(DBC[CP.carFingerprint]['pt'])
     self.shifter_values = can_define.dv["ECMPRDNL"]["PRNDL"]
-
+      
     self.prev_distance_button = 0
     self.prev_lka_button = 0
     self.lka_button = 0
@@ -28,7 +28,8 @@ class CarState(CarStateBase):
     self.cruiseMain = False
     self.engineRPM = 0
 
-  def update(self, pt_cp, ch_cp): # ch_cp is for brakeLights
+
+  def update(self, pt_cp, ch_cp):
     ret = car.CarState.new_message()
 
     self.prev_cruise_buttons = self.cruise_buttons
@@ -47,6 +48,7 @@ class CarState(CarStateBase):
     ret.standstill = ret.vEgoRaw < 0.01
 
     ret.steeringAngleDeg = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelAngle']
+    ret.steeringRateDeg = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelRate']
     ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL"]['PRNDL'], None))
     ret.brake = pt_cp.vl["EBCMBrakePedalPosition"]['BrakePedalPosition'] / 0xd0
     # Brake pedal's potentiometer returns near-zero reading even when pedal is not pressed.
@@ -55,6 +57,7 @@ class CarState(CarStateBase):
 
     ret.gas = pt_cp.vl["AcceleratorPedal"]['AcceleratorPedal'] / 254.
     ret.gasPressed = ret.gas > 1e-5
+
 
     ret.steeringTorque = pt_cp.vl["PSCMStatus"]['LKADriverAppldTrq']
     ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
@@ -81,7 +84,7 @@ class CarState(CarStateBase):
     if self.car_fingerprint == CAR.VOLT:
       self.regenPaddlePressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
       ret.brakePressed = ret.brakePressed or self.regenPaddlePressed
-
+      
     ret.cruiseState.enabled = self.pcm_acc_status != AccState.OFF
     ret.cruiseState.standstill = False
 
@@ -90,7 +93,9 @@ class CarState(CarStateBase):
     ret.steerWarning = self.lkas_status not in [0, 1]
 
     ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]['LKATorqueDelivered']
-#    self.engineRPM = pt_cp.vl["ECMEngineStatus"]['EngineRPM']
+    self.engineRPM = pt_cp.vl["ECMEngineStatus"]['EngineRPM']
+	
+    ret.brakeLights = ch_cp.vl["EBCMFrictionBrakeStatus"]["FrictionBrakePressure"] != 0 or ret.brakePressed
 
     if kegman_kans.conf['AutoHold'] == "1":
       self.autoHold = True
@@ -98,17 +103,11 @@ class CarState(CarStateBase):
       self.autoHold = False
 
     ret.autoHoldActivated = self.autoHoldActivated
-
-    #added bellow line for brakeLights by neokii
-    ret.brakeLights = ch_cp.vl["EBCMFrictionBrakeStatus"]["FrictionBrakePressure"] != 0 or ret.brakePressed
-
     return ret
 
-
   def get_follow_level(self):
-    return self.follow_level
-
-
+    return self.follow_level  
+  
   @staticmethod
   def get_can_parser(CP):
     # this function generates lists for signal, messages and initial values
@@ -126,6 +125,7 @@ class CarState(CarStateBase):
       ("CruiseState", "AcceleratorPedal2", 0),
       ("ACCButtons", "ASCMSteeringButton", CruiseButtons.UNPRESS),
       ("SteeringWheelAngle", "PSCMSteeringAngle", 0),
+      ("SteeringWheelRate", "PSCMSteeringAngle", 0),
       ("FLWheelSpd", "EBCMWheelSpdFront", 0),
       ("FRWheelSpd", "EBCMWheelSpdFront", 0),
       ("RLWheelSpd", "EBCMWheelSpdRear", 0),
@@ -139,6 +139,7 @@ class CarState(CarStateBase):
       ("LKAButton", "ASCMSteeringButton", 0),
       ("DistanceButton", "ASCMSteeringButton", 0),
       ("LKATorqueDelivered", "PSCMStatus", 0),
+      ("EngineRPM", "ECMEngineStatus", 0),
     ]
 
     if CP.carFingerprint == CAR.VOLT:
@@ -148,7 +149,6 @@ class CarState(CarStateBase):
 
     return CANParser(DBC[CP.carFingerprint]['pt'], signals, [], CanBus.POWERTRAIN)
 
-# bellows are for brakeLights
   @staticmethod
   def get_chassis_can_parser(CP):
     # this function generates lists for signal, messages and initial values

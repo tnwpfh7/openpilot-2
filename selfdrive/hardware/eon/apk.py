@@ -4,9 +4,8 @@ import glob
 import hashlib
 import shutil
 from common.basedir import BASEDIR
-from selfdrive.swaglog import cloudlog
 
-android_packages = ("ai.comma.plus.offroad",)
+android_packages = ("com.neokii.optool", "com.neokii.openpilot", )
 
 def get_installed_apks():
   dat = subprocess.check_output(["pm", "list", "packages", "-f"], encoding='utf8').strip().split("\n")
@@ -53,13 +52,9 @@ def pm_grant(package, permission):
 
 def system(cmd):
   try:
-    cloudlog.info("running %s" % cmd)
     subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
   except subprocess.CalledProcessError as e:
-    cloudlog.event("running failed",
-      cmd=e.cmd,
-      output=e.output[-1024:],
-      returncode=e.returncode)
+    pass
 
 # *** external functions ***
 
@@ -73,7 +68,7 @@ def update_apks():
     if app not in installed:
       installed[app] = None
 
-  cloudlog.info("installed apks %s" % (str(installed), ))
+  #cloudlog.info("installed apks %s" % (str(installed), ))
 
   for app in installed.keys():
     apk_path = os.path.join(BASEDIR, "apk/"+app+".apk")
@@ -84,14 +79,14 @@ def update_apks():
     h2 = None
     if installed[app] is not None:
       h2 = hashlib.sha1(open(installed[app], 'rb').read()).hexdigest()
-      cloudlog.info("comparing version of %s  %s vs %s" % (app, h1, h2))
+      print("comparing version of %s  %s vs %s" % (app, h1, h2))
 
     if h2 is None or h1 != h2:
-      cloudlog.info("installing %s" % app)
+      print("installing %s" % app)
 
       success = install_apk(apk_path)
       if not success:
-        cloudlog.info("needing to uninstall %s" % app)
+        print("needing to uninstall %s" % app)
         system("pm uninstall %s" % app)
         success = install_apk(apk_path)
 

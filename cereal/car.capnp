@@ -99,18 +99,19 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     fanMalfunction @91;
     cameraMalfunction @92;
     gpsMalfunction @94;
-    startupOneplus @82;
     processNotRunning @95;
+    dashcamMode @96;
 
     #Autohold Activate
-    autoHoldActivated @96;
+    autoHoldActivated @97;
 
     #Enable greyPanda
-    startupGreyPanda @97;
+    startupGreyPanda @98;
 
     #Road speed Limiter
-    slowingDownSpeed @98;
-
+    slowingDownSpeed @99;
+    slowingDownSpeedSound @100;
+    
     radarCanErrorDEPRECATED @15;
     radarCommIssueDEPRECATED @67;
     gasUnavailableDEPRECATED @3;
@@ -129,6 +130,7 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     focusRecoverActiveDEPRECATED @86;
     neosUpdateRequiredDEPRECATED @88;
     modelLagWarningDEPRECATED @93;
+    startupOneplusDEPRECATED @82;
   }
 }
 
@@ -192,6 +194,7 @@ struct CarState {
   readdistancelines @37 :Float32;
   lkMode @38 :Bool;
   engineRPM @39 :Float32;
+  cruiseGap @41 : Int32;  
 
   # which packets this state came from
   canMonoTimes @12: List(UInt64);
@@ -357,6 +360,7 @@ struct CarControl {
       chimeWarningRepeat @6;
       chimePrompt @7;
       chimeWarning2Repeat @8;
+      chimeSlowingDownSpeed @9;
     }
   }
 
@@ -392,11 +396,11 @@ struct CarParams {
   brakeMaxV @16 :List(Float32);
 
   # things about the car in the manual
-  mass @17 :Float32;             # [kg] running weight
-  wheelbase @18 :Float32;        # [m] distance from rear to front axle
-  centerToFront @19 :Float32;   # [m] GC distance to front axle
-  steerRatio @20 :Float32;       # [] ratio between front wheels and steering wheel angles
-  steerRatioRear @21 :Float32;  # [] rear steering ratio wrt front steering (usually 0)
+  mass @17 :Float32;            # [kg] curb weight: all fluids no cargo
+  wheelbase @18 :Float32;       # [m] distance from rear axle to front axle
+  centerToFront @19 :Float32;   # [m] distance from center of mass to front axle
+  steerRatio @20 :Float32;      # [] ratio of steering wheel angle to front wheel angle
+  steerRatioRear @21 :Float32;  # [] ratio of steering wheel angle to rear wheel angle (usually 0)
 
   # things we can derive
   rotationalInertia @22 :Float32;    # [kg*m2] body rotational inertia
@@ -459,8 +463,9 @@ struct CarParams {
     kpV @1 :List(Float32);
     kiBP @2 :List(Float32);
     kiV @3 :List(Float32);
-    deadzoneBP @4 :List(Float32);
-    deadzoneV @5 :List(Float32);
+    kf @4 :Float32;
+    deadzoneBP @5 :List(Float32);
+    deadzoneV @6 :List(Float32);
   }
 
   struct LateralINDITuning {

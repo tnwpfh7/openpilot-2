@@ -2,9 +2,9 @@
 from cereal import car
 from common.numpy_fast import interp
 from selfdrive.config import Conversions as CV
-from selfdrive.car.gm.values import CAR, CruiseButtons, \
-                                    AccState
-from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, gen_empty_fingerprint
+from selfdrive.car.gm.values import CAR, Ecu, ECU_FINGERPRINT, CruiseButtons, \
+                                    AccState, FINGERPRINTS
+from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, is_ecu_disconnected, gen_empty_fingerprint
 from selfdrive.car.interfaces import CarInterfaceBase
 
 FOLLOW_AGGRESSION = 0.15 # (Acceleration/Decel aggression) Lower is more aggressive
@@ -14,9 +14,9 @@ ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 
 class CarInterface(CarInterfaceBase):
-
   @staticmethod
   def compute_gb(accel, speed):
+  	# Ripped from compute_gb_honda in Honda's interface.py. Works well off shelf but may need more tuning
     creep_brake = 0.0
     creep_speed = 2.68
     creep_brake_value = 0.10
@@ -75,14 +75,14 @@ class CarInterface(CarInterfaceBase):
     # Start with a baseline lateral tuning for all GM vehicles. Override tuning as needed in each model section below.
     ret.minSteerSpeed = 7 * CV.MPH_TO_MS
     ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-    ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
-    ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
-    ret.steerRateCost = 0.66
-    ret.steerActuatorDelay = 0.2  # Default delay, not measured yet
+    ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.0414]]
+    ret.lateralTuning.pid.kf = 0.00007   # full torque for 20 deg at 80mph means 0.00007818594
+    ret.steerRateCost = 0.65
+    ret.steerActuatorDelay = 0.35  # Default delay, not measured yet
 
     if candidate == CAR.VOLT:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
-      ret.minEnableSpeed = -1 * CV.MPH_TO_MS
+      ret.minEnableSpeed = -1
       ret.mass = 1607. + STD_CARGO_KG
       ret.wheelbase = 2.69
       ret.steerRatio = 15.7
@@ -148,7 +148,7 @@ class CarInterface(CarInterfaceBase):
     ret.stoppingControl = True
     ret.startAccel = 0.8
 
-    ret.steerLimitTimer = 3.4
+    ret.steerLimitTimer = 7.4
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
 
     return ret
@@ -156,17 +156,19 @@ class CarInterface(CarInterfaceBase):
   # returns a car.CarState
   def update(self, c, can_strings):
     self.cp.update_strings(can_strings)
-    self.cp_chassis.update_strings(can_strings) ##this line for brakeLights
 
-    ret = self.CS.update(self.cp, self.cp_chassis) ##this line for brakeLights
+    self.cp_chassis.update_strings(can_strings)
+    ret = self.CS.update(self.cp, self.cp_chassis)
 
     cruiseEnabled = self.CS.pcm_acc_status != AccState.OFF
     ret.cruiseState.enabled = cruiseEnabled
 
     ret.readdistancelines = self.CS.follow_level
-
+    
     ret.canValid = self.cp.can_valid
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
+
+    ret.engineRPM = self.CS.engineRPM
 
     buttonEvents = []
 
@@ -193,7 +195,6 @@ class CarInterface(CarInterfaceBase):
       buttonEvents.append(be)
 
     ret.buttonEvents = buttonEvents
-
     if cruiseEnabled and self.CS.lka_button and self.CS.lka_button != self.CS.prev_lka_button:
       self.CS.lkMode = not self.CS.lkMode
 
@@ -208,10 +209,7 @@ class CarInterface(CarInterfaceBase):
       events.add(EventName.belowEngageSpeed)
     if self.CS.park_brake:
       events.add(EventName.parkBrake)
-#    if self.CS.pcm_acc_status == AccState.FAULTED:
-#      events.add(EventName.controlsFailed)
-#    if ret.vEgo < self.CP.minSteerSpeed:
-#      events.add(car.CarEvent.EventName.belowSteerSpeed)
+
     if self.CS.autoHoldActivated:
       events.add(car.CarEvent.EventName.autoHoldActivated)
 
@@ -239,10 +237,6 @@ class CarInterface(CarInterfaceBase):
       events.add(EventName.parkBrake)
     if ret.cruiseState.standstill:
       events.add(EventName.resumeRequired)
-#    if self.CS.pcm_acc_status == AccState.FAULTED:
-#      events.add(EventName.controlsFailed)
-#    if ret.vEgo < self.CP.minSteerSpeed:
-#      events.add(car.CarEvent.EventName.belowSteerSpeed)
 
     # handle button presses
     for b in ret.buttonEvents:
@@ -285,5 +279,5 @@ class CarInterface(CarInterfaceBase):
         self.CS.autoHoldActive = True
       elif self.CS.out.vEgo < 0.01 and self.CS.out.brakePressed:
         self.CS.autoHoldActive = True
-
+        
     return can_sends

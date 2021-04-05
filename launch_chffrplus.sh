@@ -1,14 +1,22 @@
 #!/usr/bin/bash
 
-if [ ! -f "/system/fonts/opensans_regular.ttf" ]; then
+if [ ! -f "/data/openpilot/installer/boot.zip" ]; then
+mount -o rw,remount /system
+cp -f /data/openpilot/installer/bootanimaion.zip /system/media/bootanimaion.zip
+cp -f /data/openpilot/installer/spinner /data/openpilot/selfdrive/ui/qt/spinner
+chmod 700 /system/media/bootanimaion.zip
+chmod 700 /data/openpilot/selfdrive/ui/qt/spinner
+mount -o ro,remount /system
+fi
 
+if [ ! -f "/system/fonts/opensans_regular.ttf" ]; then
 echo "Installing fonts..."
 mount -o rw,remount /system
-
-cp -f /data/openpilot/selfdrive/assets/fonts/opensans_* /system/fonts/
-cp -f /data/openpilot/selfdrive/assets/fonts.xml /system/etc/fonts.xml
+cp -f /data/openpilot/installer/fonts/NanumGothic* /system/fonts/
+cp -f /data/openpilot/installer/fonts/opensans_* /data/openpilot/selfdrive/assets/fonts/
+cp -f /data/openpilot/installer/fonts/fonts.xml /system/etc/fonts.xml
 chmod 644 /system/etc/fonts.xml
-chmod 644 /system/fonts/opensans_*
+chmod 644 /system/fonts/NanumGothic*
 mount -o ro,remount /system
 fi
 
@@ -31,6 +39,7 @@ source "$BASEDIR/launch_env.sh"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 function two_init {
+
   # Wifi scan
   wpa_cli IFNAME=wlan0 SCAN
 
@@ -76,8 +85,7 @@ function two_init {
   echo 1 > /proc/irq/6/smp_affinity_list  # MDSS
 
   # USB traffic needs realtime handling on cpu 3
-  [ -d "/proc/irq/733" ] && echo 3 > /proc/irq/733/smp_affinity_list # USB for LeEco
-  [ -d "/proc/irq/736" ] && echo 3 > /proc/irq/736/smp_affinity_list # USB for OP3T
+  [ -d "/proc/irq/733" ] && echo 3 > /proc/irq/733/smp_affinity_list
 
   # GPU and camera get cpu 2
   CAM_IRQS="177 178 179 180 181 182 183 184 185 186 192"
@@ -112,18 +120,6 @@ function two_init {
     fi
 
     "$DIR/installer/updater/updater" "file://$DIR/installer/updater/update.json"
-  fi
-
-  # One-time fix for a subset of OP3T with gyro orientation offsets.
-  # Remove and regenerate qcom sensor registry. Only done on OP3T mainboards.
-  # Performed exactly once. The old registry is preserved just-in-case, and
-  # doubles as a flag denoting we've already done the reset.
-  if ! $(grep -q "letv" /proc/cmdline) && [ ! -f "/persist/comma/op3t-sns-reg-backup" ]; then
-    echo "Performing OP3T sensor registry reset"
-    mv /persist/sensors/sns.reg /persist/comma/op3t-sns-reg-backup &&
-      rm -f /persist/sensors/sensors_settings /persist/sensors/error_log /persist/sensors/gyro_sensitity_cal &&
-      echo "restart" > /sys/kernel/debug/msm_subsys/slpi &&
-      sleep 5  # Give Android sensor subsystem a moment to recover
   fi
 }
 
@@ -254,8 +250,8 @@ function launch {
   tmux capture-pane -pq -S-1000 > /tmp/launch_log
 
   # start manager
-  cd selfdrive
-  ./manager.py
+  cd selfdrive/manager
+  ./build.py && ./manager.py
 
   # if broken, keep on screen error
   while true; do sleep 1; done
