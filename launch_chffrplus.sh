@@ -17,6 +17,7 @@ cp -f /data/openpilot/installer/fonts/opensans_* /data/openpilot/selfdrive/asset
 cp -f /data/openpilot/installer/fonts/fonts.xml /system/etc/fonts.xml
 chmod 644 /system/etc/fonts.xml
 chmod 644 /system/fonts/NanumGothic*
+chmod 700 /data/openpilot/selfdrive/manager/build.py
 mount -o ro,remount /system
 fi
 
