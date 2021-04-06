@@ -97,6 +97,19 @@ typedef struct UIScene {
 
   bool is_rhd;
   bool driver_view;
+  bool brakeLights;
+  float steeringTorqueEps;
+
+  float angleSteers;
+  int engineRPM;
+  bool recording;
+
+  int lead_status;
+  float lead_d_rel, lead_v_rel;
+
+  float cpuTemp;
+  int cpuPerc;
+  int cpuUsagePercent;
 
   std::string alert_text1;
   std::string alert_text2;
@@ -131,6 +144,13 @@ typedef struct UIScene {
   float light_sensor, accel_sensor, gyro_sensor;
   bool started, ignition, is_metric, longitudinal_control, end_to_end;
   uint64_t started_frame;
+  
+  // neokii dev UI
+  cereal::CarControl::Reader car_control;
+  cereal::CarParams::Reader car_params;
+  cereal::GpsLocationData::Reader gps_ext;
+  cereal::LiveParametersData::Reader live_params;
+  
 } UIScene;
 
 typedef struct UIState {
@@ -167,6 +187,11 @@ typedef struct UIState {
   bool sidebar_collapsed;
   Rect video_rect, viz_rect;
   float car_space_transform[6];
+
+  //
+  bool show_debug_ui;
+  TouchState touch;
+
 } UIState;
 
 void ui_init(UIState *s);
