@@ -6,7 +6,7 @@ import hashlib
 from Crypto.PublicKey import RSA
 import binascii
 
-# increment this to make new hardware not run old versions
+# increase this to make new hardware not run old versions
 VERSION = 2
 
 rsa = RSA.importKey(open(sys.argv[3]).read())
