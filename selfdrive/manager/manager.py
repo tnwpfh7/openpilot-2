@@ -2,9 +2,9 @@
 import datetime
 import os
 import signal
-import subprocess
 import sys
 import traceback
+from multiprocessing.context import Process
 
 import cereal.messaging as messaging
 import selfdrive.crash as crash
@@ -13,11 +13,12 @@ from common.params import Params
 from common.text_window import TextWindow
 from selfdrive.hardware import HARDWARE
 from selfdrive.manager.helpers import unblock_stdout
-from selfdrive.manager.process import ensure_running
+from selfdrive.manager.process import ensure_running, launcher
 from selfdrive.manager.process_config import managed_processes
 from selfdrive.registration import register
 from selfdrive.swaglog import cloudlog, add_file_handler
 from selfdrive.version import dirty, version
+from selfdrive.hardware.eon.apk import update_apks, pm_grant, appops_set, system
 
 
 def manager_init():
@@ -96,11 +97,24 @@ def manager_cleanup():
 
 
 def manager_thread():
+
+  update_apks()
+  os.chmod(BASEDIR, 0o755)
+  os.chmod("/dev/shm", 0o777)
+  os.chmod(os.path.join(BASEDIR, "cereal"), 0o755)
+  os.chmod(os.path.join(BASEDIR, "cereal", "libmessaging_shared.so"), 0o755)
+
+  pm_grant("com.neokii.openpilot", "android.permission.ACCESS_FINE_LOCATION")
+  appops_set("com.neokii.optool", "SU", "allow")
+  system("am startservice com.neokii.optool/.MainService")
+  system("am startservice com.neokii.openpilot/.MainService")
+
+
   cloudlog.info("manager start")
   cloudlog.info({"environ": os.environ})
 
   # save boot log
-  subprocess.call("./bootlog", cwd=os.path.join(BASEDIR, "selfdrive/loggerd"))
+  #subprocess.call("./bootlog", cwd=os.path.join(BASEDIR, "selfdrive/loggerd"))
 
   ignore = []
   if os.getenv("NOBOARD") is not None:
