@@ -2,12 +2,12 @@ from common.numpy_fast import interp
 import numpy as np
 from selfdrive.hardware import EON, TICI
 from cereal import log
-
+from selfdrive.ntune import ntune_get
 
 TRAJECTORY_SIZE = 33
 # camera offset is meters from center car to camera
 if EON:
-  CAMERA_OFFSET = 0.06
+  CAMERA_OFFSET = 0.02
   PATH_OFFSET = 0.0
 elif TICI:
   CAMERA_OFFSET = -0.04
@@ -45,8 +45,9 @@ class LanePlanner:
       # left and right ll x is the same
       self.ll_x = md.laneLines[1].x
       # only offset left and right lane lines; offsetting path does not make sense
-      self.lll_y = np.array(md.laneLines[1].y) - CAMERA_OFFSET
-      self.rll_y = np.array(md.laneLines[2].y) - CAMERA_OFFSET
+      cameraOffset = ntune_get("cameraOffset")
+      self.lll_y = np.array(md.laneLines[1].y) - cameraOffset
+      self.rll_y = np.array(md.laneLines[2].y) - cameraOffset
       self.lll_prob = md.laneLineProbs[1]
       self.rll_prob = md.laneLineProbs[2]
       self.lll_std = md.laneLineStds[1]
