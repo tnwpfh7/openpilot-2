@@ -100,18 +100,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     cameraMalfunction @92;
     gpsMalfunction @94;
     processNotRunning @95;
+    dashcamMode @96;
 
-    #Autohold Activate
-    autoHoldActivated @96;
-
-    #Enable greyPanda
-    startupGreyPanda @97;
-
-    #Road speed Limiter
-    slowingDownSpeed @98;
-
-    dashcamMode @99;
-    
     radarCanErrorDEPRECATED @15;
     radarCommIssueDEPRECATED @67;
     gasUnavailableDEPRECATED @3;
@@ -190,20 +180,12 @@ struct CarState {
   # clutch (manual transmission only)
   clutchPressed @28 :Bool;
 
-  #Kegman 3Bar Distance Profile
-  readdistancelines @37 :Float32;
-  lkMode @38 :Bool;
-  engineRPM @39 :Float32;
-
   # which packets this state came from
   canMonoTimes @12: List(UInt64);
 
   # blindspot sensors
   leftBlindspot @33 :Bool; # Is there something blocking the left lane change
   rightBlindspot @34 :Bool; # Is there something blocking the right lane change
-
-  # Autohold for GM
-  autoHoldActivated @40 :Bool;
 
   struct WheelSpeeds {
     # optional wheel speeds
@@ -344,9 +326,6 @@ struct CarControl {
       seatbeltUnbuckled @5;
       speedTooHigh @6;
       ldw @7;
-
-      # Autohold Event
-      autoHoldActivated @8;
     }
 
     enum AudibleAlert {
@@ -448,12 +427,7 @@ struct CarParams {
     kpV @1 :List(Float32);
     kiBP @2 :List(Float32);
     kiV @3 :List(Float32);
-    kf @6 :Float32;
-
-    #D gain
-    kdBP @4 :List(Float32);
-    kdV @5 :List(Float32);
-
+    kf @4 :Float32;
   }
 
   struct LongitudinalPIDTuning {
