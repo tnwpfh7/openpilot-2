@@ -226,7 +226,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "Be ready to take over at any time",
       "Always keep hands on wheel and eyes on road",
       AlertStatus.normal, AlertSize.mid,
-      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 15.),
+      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 2.),
   },
 
   EventName.startupMaster: {
@@ -234,7 +234,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "WARNING: This branch is not tested",
       "Always keep hands on wheel and eyes on road",
       AlertStatus.userPrompt, AlertSize.mid,
-      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 15.),
+      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 2.),
   },
 
   EventName.startupNoControl: {
@@ -242,7 +242,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "Dashcam mode",
       "Always keep hands on wheel and eyes on road",
       AlertStatus.normal, AlertSize.mid,
-      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 15.),
+      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 2.),
   },
 
   EventName.startupNoCar: {
@@ -250,7 +250,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "Dashcam mode for unsupported car",
       "Always keep hands on wheel and eyes on road",
       AlertStatus.normal, AlertSize.mid,
-      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 15.),
+      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 2.),
   },
 
   EventName.dashcamMode: {
@@ -759,5 +759,14 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0.4, .3),
   },
   
+  EventName.slowingDownSpeed: {
+    ET.PERMANENT: Alert("Slowing down","", AlertStatus.normal, AlertSize.small,
+      Priority.MID, VisualAlert.none, AudibleAlert.none, 0., .1, .1),
+  },
+
+  EventName.slowingDownSpeedSound: {
+    ET.PERMANENT: Alert("Slowing down","", AlertStatus.normal, AlertSize.small,
+      Priority.HIGH, VisualAlert.none, AudibleAlert.chimeSlowingDownSpeed, 2., 2., 2.),
+  },
 
 }
