@@ -11,12 +11,6 @@
 #include "paint.hpp"
 #include "dashcam.h"
 
-int write_param_float(float param, const char* param_name, bool persistent_param) {
-  char s[16];
-  int size = snprintf(s, sizeof(s), "%f", param);
-  return Params(persistent_param).write_db_value(param_name, s, size < sizeof(s) ? size : sizeof(s));
-}
-
 // Projects a point in car to space to the corresponding point in full frame
 // image space.
 static bool calib_frame_to_full_frame(const UIState *s, float in_x, float in_y, float in_z, vertex_data *out) {
@@ -60,7 +54,7 @@ void ui_init(UIState *s) {
 #ifdef QCOM2
     "roadCameraState",
 #endif
-  });
+    "carControl", "gpsLocationExternal", "liveParameters"});
 
   s->scene.started = false;
   s->status = STATUS_OFFROAD;
@@ -71,6 +65,8 @@ void ui_init(UIState *s) {
   s->vipc_client_rear = new VisionIpcClient("camerad", VISION_STREAM_RGB_BACK, true);
   s->vipc_client_front = new VisionIpcClient("camerad", VISION_STREAM_RGB_FRONT, true);
   s->vipc_client = s->vipc_client_rear;
+
+  touch_init(&(s->touch));
 }
 
 static int get_path_length_idx(const cereal::ModelDataV2::XYZTData::Reader &line, const float path_height) {
@@ -147,6 +143,7 @@ static void update_sockets(UIState *s) {
   UIScene &scene = s->scene;
   if (scene.started && sm.updated("controlsState")) {
     scene.controls_state = sm["controlsState"].getControlsState();
+    s->scene.angleSteers  = scene.controls_state.getAngleSteers();
   }
   if (sm.updated("carState")) {
     scene.car_state = sm["carState"].getCarState();
@@ -200,6 +197,7 @@ static void update_sockets(UIState *s) {
     scene.gpsOK = sm["liveLocationKalman"].getLiveLocationKalman().getGpsOK();
   }
   if (sm.updated("carParams")) {
+    scene.car_params = sm["carParams"].getCarParams();
     scene.longitudinal_control = sm["carParams"].getCarParams().getOpenpilotLongitudinalControl();
   }
   if (sm.updated("driverState")) {
@@ -207,11 +205,6 @@ static void update_sockets(UIState *s) {
   }
   if (sm.updated("driverMonitoringState")) {
     scene.dmonitoring_state = sm["driverMonitoringState"].getDriverMonitoringState();
-    if(!scene.driver_view && !scene.ignition) {
-      read_param(&scene.driver_view, "IsDriverViewEnabled");
-    }
-  } else if ((sm.frame - sm.rcv_frame("driverMonitoringState")) > UI_FREQ/2) {
-    scene.driver_view = false;
   }
   if (sm.updated("sensorEvents")) {
     for (auto sensor : sm["sensorEvents"].getSensorEvents()) {
@@ -286,15 +279,16 @@ static void update_alert(UIState *s) {
 static void update_params(UIState *s) {
   const uint64_t frame = s->sm->frame;
   UIScene &scene = s->scene;
-
+  Params params;
   if (frame % (5*UI_FREQ) == 0) {
-    read_param(&scene.is_metric, "IsMetric");
+    scene.is_metric = params.getBool("IsMetric");
   } else if (frame % (6*UI_FREQ) == 0) {
     scene.athenaStatus = NET_DISCONNECTED;
-    uint64_t last_ping = 0;
-    if (read_param(&last_ping, "LastAthenaPingTime") == 0) {
-      scene.athenaStatus = nanos_since_boot() - last_ping < 70e9 ? NET_CONNECTED : NET_ERROR;
+    if (auto last_ping = params.get<float>("LastAthenaPingTime"); last_ping) {
+      scene.athenaStatus = nanos_since_boot() - *last_ping < 70e9 ? NET_CONNECTED : NET_ERROR;
     }
+  } else if (frame % (7*UI_FREQ) == 0) {
+	s->show_debug_ui = params.getBool("ShowDebugUI");
   }
 }
 
@@ -336,8 +330,8 @@ static void update_status(UIState *s) {
       s->status = STATUS_DISENGAGED;
       s->scene.started_frame = s->sm->frame;
 
-      read_param(&s->scene.is_rhd, "IsRHD");
-      read_param(&s->scene.end_to_end, "EndToEndToggle");
+      s->scene.is_rhd = Params().getBool("IsRHD");
+      s->scene.end_to_end = Params().getBool("EndToEndToggle");
       s->sidebar_collapsed = true;
       s->scene.alert_size = cereal::ControlsState::AlertSize::NONE;
       s->vipc_client = s->scene.driver_view ? s->vipc_client_front : s->vipc_client_rear;

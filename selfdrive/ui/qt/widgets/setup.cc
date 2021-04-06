@@ -106,9 +106,9 @@ PrimeUserWidget::PrimeUserWidget(QWidget* parent) : QWidget(parent) {
   }
 
   // TODO: only send the request when widget is shown
-  QString url = "https://api.commadotai.com/v1/devices/" + dongleId + "/owner";
-  RequestRepeater* repeater = new RequestRepeater(this, url, 6, "ApiCache_Owner");
-  QObject::connect(repeater, SIGNAL(receivedResponse(QString)), this, SLOT(replyFinished(QString)));
+  //QString url = "https://api.commadotai.com/v1/devices/" + dongleId + "/owner";
+  //RequestRepeater* repeater = new RequestRepeater(this, url, 6);
+  //QObject::connect(repeater, SIGNAL(receivedResponse(QString)), this, SLOT(replyFinished(QString)));
 }
 
 void PrimeUserWidget::replyFinished(QString response) {
