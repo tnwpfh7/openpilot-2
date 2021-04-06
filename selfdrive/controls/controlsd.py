@@ -2,11 +2,12 @@
 import os
 import math
 from cereal import car, log
-from common.numpy_fast import clip
+from common.numpy_fast import clip, interp
 from common.realtime import sec_since_boot, config_realtime_process, Priority, Ratekeeper, DT_CTRL
 from common.profiler import Profiler
 from common.params import Params, put_nonblocking
 import cereal.messaging as messaging
+from selfdrive.car.gm.values import CAR
 from selfdrive.config import Conversions as CV
 from selfdrive.swaglog import cloudlog
 from selfdrive.boardd.boardd import can_list_to_can_capnp
@@ -24,7 +25,7 @@ from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.controls.lib.longitudinal_planner import LON_MPC_STEP
 from selfdrive.locationd.calibrationd import Calibration
 from selfdrive.hardware import HARDWARE, TICI
-from selfdrive.ntune import ntune_get
+from selfdrive.ntune import ntune_get, ntune_isEnabled
 from selfdrive.road_speed_limiter import road_speed_limiter_get_max_speed
 
 LDW_MIN_SPEED = 31 * CV.MPH_TO_MS
@@ -388,10 +389,19 @@ class Controls:
   def state_control(self, CS):
     """Given the state, this function returns an actuators packet"""
 
+# Neokii's live tune
     # Update VehicleModel
     params = self.sm['liveParameters']
     x = max(params.stiffnessFactor, 0.1)
-    sr = max(params.steerRatio, 0.1)
+    #sr = max(params.steerRatio, 0.1)
+    if self.CP.carName in [CAR.VOLT]:
+      sr = interp(abs(self.angle_steers_des), [5., 35.], [13.5, 17.72])
+    else:
+      if ntune_isEnabled('useLiveSteerRatio'):
+        sr = max(self.sm['liveParameters'].steerRatio, 0.1)
+      else:
+        sr = max(ntune_get('steerRatio'), 0.1)
+
     self.VM.update_params(x, sr)
 
     lat_plan = self.sm['lateralPlan']
@@ -555,6 +565,10 @@ class Controls:
     controlsState.roadLimitSpeed = self.road_limit_speed
     controlsState.roadLimitSpeedLeftDist = self.road_limit_left_dist
 
+# display SR/SRC/SAD on Ui
+    controlsState.steerRatio = self.VM.sR
+    controlsState.steerRateCost = ntune_get('steerRateCost')
+    controlsState.steerActuatorDelay = ntune_get('steerActuatorDelay')
 
     if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
       controlsState.lateralControlState.angleState = lac_log
