@@ -2,9 +2,9 @@
 
 if [ ! -f "/data/openpilot/installer/boot.zip" ]; then
 mount -o rw,remount /system
-cp -f /data/openpilot/installer/bootanimaion.zip /system/media/bootanimaion.zip
-cp -f /data/openpilot/installer/spinner /data/openpilot/selfdrive/ui/qt/spinner
-chmod 700 /system/media/bootanimaion.zip
+cp -f /data/openpilot/installer/bootanimation.zip /system/media/
+cp -f /data/openpilot/installer/spinner /data/openpilot/selfdrive/ui/qt/
+chmod 744 /system/media/bootanimation.zip
 chmod 700 /data/openpilot/selfdrive/ui/qt/spinner
 mount -o ro,remount /system
 fi
@@ -17,7 +17,6 @@ cp -f /data/openpilot/installer/fonts/opensans_* /data/openpilot/selfdrive/asset
 cp -f /data/openpilot/installer/fonts/fonts.xml /system/etc/fonts.xml
 chmod 644 /system/etc/fonts.xml
 chmod 644 /system/fonts/NanumGothic*
-chmod 700 /data/openpilot/selfdrive/manager/build.py
 mount -o ro,remount /system
 fi
 
