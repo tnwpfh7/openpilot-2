@@ -512,6 +512,12 @@ class Controls:
     controlsState.lateralPlanMonoTime = self.sm.logMonoTime['lateralPlan']
     controlsState.enabled = self.enabled
     controlsState.active = self.active
+
+#   bellow 3Lines are for Wheel Rotation
+    controlsState.vEgo = CS.vEgo
+    controlsState.angleSteers = CS.steeringAngleDeg
+    controlsState.steerOverride = CS.steeringPressed
+
     controlsState.curvature = curvature
     controlsState.steeringAngleDesiredDeg = angle_steers_des
     controlsState.state = self.state
