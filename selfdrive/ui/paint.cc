@@ -360,6 +360,7 @@ static void ui_draw_vision_header(UIState *s) {
 
 static void ui_draw_vision_footer(UIState *s) {
   ui_draw_vision_face(s);
+  ui_draw_vision_brake(s);
 }
 
 static float get_alert_alpha(float blink_rate) {
@@ -602,6 +603,7 @@ void ui_nvg_init(UIState *s) {
       {"network_3", "../assets/images/network_3.png"},
       {"network_4", "../assets/images/network_4.png"},
       {"network_5", "../assets/images/network_5.png"},
+      {"brake", "../assets/img_brake_disc.png"},
   };
   for (auto [name, file] : images) {
     s->images[name] = nvgCreateImage(s->vg, file, 1);
