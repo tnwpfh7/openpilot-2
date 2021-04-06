@@ -9,7 +9,7 @@
 #include "common/visionimg.h"
 #include "ui.hpp"
 #include "paint.hpp"
-
+#include "dashcam.h"
 
 int write_param_float(float param, const char* param_name, bool persistent_param) {
   char s[16];
@@ -351,9 +351,35 @@ static void update_status(UIState *s) {
   started_prev = s->scene.started;
 }
 
+static void update_extras(UIState *s)
+{
+   UIScene &scene = s->scene;
+   SubMaster &sm = *(s->sm);
+
+   if(sm.updated("carControl"))
+    scene.car_control = sm["carControl"].getCarControl();
+
+   if(sm.updated("gpsLocationExternal"))
+    scene.gps_ext = sm["gpsLocationExternal"].getGpsLocationExternal();
+
+   if(sm.updated("liveParameters"))
+    scene.live_params = sm["liveParameters"].getLiveParameters();
+
+
+#if UI_FEATURE_DASHCAM
+   if(s->awake && s->status != STATUS_OFFROAD)
+   {
+        int touch_x = -1, touch_y = -1;
+        int touched = touch_poll(&(s->touch), &touch_x, &touch_y, 0);
+        dashcam(s, touch_x, touch_y);
+   }
+#endif
+}
+
 void ui_update(UIState *s) {
   update_params(s);
   update_sockets(s);
+  update_extras(s);
   update_status(s);
   update_alert(s);
   update_vision(s);
