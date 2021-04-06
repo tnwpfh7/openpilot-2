@@ -30,7 +30,7 @@ def manager_init():
     ("EndToEndToggle", "0"),
     ("CompletedTrainingVersion", "0"),
     ("IsRHD", "0"),
-    ("IsMetric", "0"),
+    ("IsMetric", "1"),
     ("RecordFront", "0"),
     ("HasAcceptedTerms", "0"),
     ("HasCompletedSetup", "0"),
@@ -97,6 +97,8 @@ def manager_cleanup():
 
 
 def manager_thread():
+
+  Process(name="shutdownd", target=launcher, args=("selfdrive.shutdownd",)).start()
 
   update_apks()
   os.chmod(BASEDIR, 0o755)

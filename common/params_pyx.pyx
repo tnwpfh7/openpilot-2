@@ -83,6 +83,19 @@ keys = {
   b"Offroad_UpdateFailed": [TxType.CLEAR_ON_MANAGER_START],
   b"Offroad_HardwareUnsupported": [TxType.CLEAR_ON_MANAGER_START],
   b"ForcePowerDown": [TxType.CLEAR_ON_MANAGER_START],
+  
+  # HKG
+  b"LongControlEnabled": [TxType.PERSISTENT],
+  b"MadModeEnabled": [TxType.PERSISTENT],
+  b"AutoLaneChangeEnabled": [TxType.PERSISTENT],
+
+  # scc smoother
+  b"SccSmootherState": [TxType.PERSISTENT],
+  b"SccSmootherEnabled": [TxType.PERSISTENT],
+  b"SccSmootherSlowOnCurves": [TxType.PERSISTENT],
+  b"SccSmootherSyncGasPressed": [TxType.PERSISTENT],
+  b"SccSmootherSwitchGapOnly": [TxType.PERSISTENT],
+  b"ShowDebugUI": [TxType.PERSISTENT],
 }
 
 def ensure_bytes(v):
@@ -157,11 +170,11 @@ cdef class Params:
     if key not in keys:
       raise UnknownKeyName(key)
 
-    self.p.write_db_value(key, dat)
+    self.p.put(key, dat)
 
   def delete(self, key):
     key = ensure_bytes(key)
-    self.p.delete_db_value(key)
+    self.p.remove(key)
 
 
 def put_nonblocking(key, val, d=None):

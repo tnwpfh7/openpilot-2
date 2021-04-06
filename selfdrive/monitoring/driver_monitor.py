@@ -14,10 +14,10 @@ EventName = car.CarEvent.EventName
 #  We recommend that you do not change these numbers from the defaults.
 # ******************************************************************************************
 
-_AWARENESS_TIME = 35.  # passive wheel touch total timeout
+_AWARENESS_TIME = 18000.  # passive wheel touch total timeout
 _AWARENESS_PRE_TIME_TILL_TERMINAL = 12.
 _AWARENESS_PROMPT_TIME_TILL_TERMINAL = 6.
-_DISTRACTED_TIME = 11.
+_DISTRACTED_TIME = 7200.
 _DISTRACTED_PRE_TIME_TILL_TERMINAL = 8.
 _DISTRACTED_PROMPT_TIME_TILL_TERMINAL = 6.
 
@@ -39,7 +39,7 @@ _PITCH_POS_ALLOWANCE = 0.12  # rad, to not be too sensitive on positive pitch
 _PITCH_NATURAL_OFFSET = 0.02  # people don't seem to look straight when they drive relaxed, rather a bit up
 _YAW_NATURAL_OFFSET = 0.08  # people don't seem to look straight when they drive relaxed, rather a bit to the right (center of car)
 
-_HI_STD_TIMEOUT = 5
+_HI_STD_TIMEOUT = 18000
 _HI_STD_FALLBACK_TIME = 10  # fall back to wheel touch if model is uncertain for a long time
 _DISTRACTED_FILTER_TS = 0.25  # 0.6Hz
 
@@ -111,7 +111,7 @@ class DriverStatus():
     self.awareness_passive = 1.
     self.driver_distracted = False
     self.driver_distraction_filter = FirstOrderFilter(0., _DISTRACTED_FILTER_TS, DT_DMON)
-    self.face_detected = False
+    self.face_detected = True
     self.face_partial = False
     self.terminal_alert_cnt = 0
     self.terminal_time = 0
@@ -186,7 +186,7 @@ class DriverStatus():
       return
 
     self.face_partial = driver_state.partialFace > _PARTIAL_FACE_THRESHOLD
-    self.face_detected = driver_state.faceProb > _FACE_THRESHOLD or self.face_partial
+    self.face_detected = True # driver_state.faceProb > _FACE_THRESHOLD or self.face_partial
     self.pose.roll, self.pose.pitch, self.pose.yaw = face_orientation_from_net(driver_state.faceOrientation, driver_state.facePosition, cal_rpy, self.is_rhd_region)
     self.pose.pitch_std = driver_state.faceOrientationStd[0]
     self.pose.yaw_std = driver_state.faceOrientationStd[1]

@@ -22,6 +22,7 @@ static struct service services[] = {
   { .name = "carControl", .port = 8023, .should_log = true, .frequency = 100, .decimation = 10 },
   { .name = "longitudinalPlan", .port = 8024, .should_log = true, .frequency = 20, .decimation = 2 },
   { .name = "liveLocation", .port = 8025, .should_log = true, .frequency = 0, .decimation = 1 },
+  { .name = "gpsLocation", .port = 8026, .should_log = true, .frequency = 1, .decimation = 1 },
   { .name = "procLog", .port = 8031, .should_log = true, .frequency = 0, .decimation = -1 },
   { .name = "gpsLocationExternal", .port = 8032, .should_log = true, .frequency = 10, .decimation = 1 },
   { .name = "ubloxGnss", .port = 8033, .should_log = true, .frequency = 10, .decimation = -1 },
