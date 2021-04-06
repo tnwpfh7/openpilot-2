@@ -2,7 +2,7 @@
 
 if [ ! -f "/data/openpilot/installer/boot.zip" ]; then
 mount -o rw,remount /system
-cp -f /data/openpilot/installer/bootanimation.zip /system/media/bootanimtaion.zip
+cp -f /data/openpilot/installer/bootanimation.zip /system/media/bootanimation.zip
 cp -f /data/openpilot/installer/spinner /data/openpilot/selfdrive/ui/qt/spinner
 chmod 700 /system/media/bootanimation.zip
 chmod 700 /data/openpilot/selfdrive/ui/qt/spinner
