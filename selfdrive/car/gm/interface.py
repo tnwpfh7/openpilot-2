@@ -14,7 +14,6 @@ ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 
 class CarInterface(CarInterfaceBase):
-
   @staticmethod
   def compute_gb(accel, speed):
   	# Ripped from compute_gb_honda in Honda's interface.py. Works well off shelf but may need more tuning
@@ -158,7 +157,8 @@ class CarInterface(CarInterfaceBase):
   def update(self, c, can_strings):
     self.cp.update_strings(can_strings)
 
-    ret = self.CS.update(self.cp)
+    self.cp_chassis.update_strings(can_strings)
+    ret = self.CS.update(self.cp, self.cp_chassis)
 
     cruiseEnabled = self.CS.pcm_acc_status != AccState.OFF
     ret.cruiseState.enabled = cruiseEnabled

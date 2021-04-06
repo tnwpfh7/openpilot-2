@@ -182,6 +182,33 @@ static void ui_draw_world(UIState *s) {
     }
   }
   nvgResetScissor(s->vg);
+
+static void ui_draw_vision_brake(UIState *s) {
+  const UIScene *scene = &s->scene;
+  const int brake_size = 96;
+  const int brake_x = (s->viz_rect.x + (brake_size * 4) + (bdr_is * 4));
+  const int brake_y = (s->viz_rect.bottom() - footer_h + ((footer_h - brake_size) / 2));
+  const int brake_img_size = (brake_size * 1.5);
+  const int brake_img_x = (brake_x - (brake_img_size / 2));
+  const int brake_img_y = (brake_y - (brake_size / 4));
+
+  bool brake_valid = scene->car_state.getBrakeLights();
+  float brake_img_alpha = brake_valid ? 1.0f : 0.15f;
+  float brake_bg_alpha = brake_valid ? 0.3f : 0.1f;
+  NVGcolor brake_bg = nvgRGBA(0, 0, 0, (255 * brake_bg_alpha));
+
+  NVGpaint brake_img = nvgImagePattern(s->vg, brake_img_x, brake_img_y,
+    brake_img_size, brake_img_size, 0, s->images["brake"], brake_img_alpha);
+
+  nvgBeginPath(s->vg);
+  nvgCircle(s->vg, brake_x, (brake_y + (bdr_is * 1.5)), brake_size);
+  nvgFillColor(s->vg, brake_bg);
+  nvgFill(s->vg);
+
+  nvgBeginPath(s->vg);
+  nvgRect(s->vg, brake_img_x, brake_img_y, brake_img_size, brake_img_size);
+  nvgFillPaint(s->vg, brake_img);
+  nvgFill(s->vg);
 }
 
 static void ui_draw_vision_maxspeed(UIState *s) {
