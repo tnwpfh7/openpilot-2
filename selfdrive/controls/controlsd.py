@@ -314,13 +314,13 @@ class Controls:
     limit_speed, self.road_limit_speed, self.road_limit_left_dist, first_started, log = road_speed_limiter_get_max_speed(CS, self.v_cruise_kph)
 
     if limit_speed > 20:
-      self.v_cruise_kph_limit = min(limit_speed, self.v_cruise_kph + 5)
+      self.v_cruise_kph_limit = min(limit_speed, self.v_cruise_kph)
 
       if limit_speed < CS.vEgo * CV.MS_TO_KPH:
         self.events.add(EventName.slowingDownSpeed)
 
     else:
-      self.v_cruise_kph_limit = self.v_cruise_kph + 5
+      self.v_cruise_kph_limit = self.v_cruise_kph
 
     # decrease the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state
