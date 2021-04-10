@@ -545,6 +545,7 @@ class Controls:
 
 #   bellow 3Lines are for Wheel Rotation
     controlsState.vEgo = CS.vEgo
+    controlsState.vEgoRaw = CS.vEgoRaw
     controlsState.angleSteers = CS.steeringAngleDeg
     controlsState.steerOverride = CS.steeringPressed
 
