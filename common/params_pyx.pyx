@@ -83,19 +83,6 @@ keys = {
   b"Offroad_UpdateFailed": [TxType.CLEAR_ON_MANAGER_START],
   b"Offroad_HardwareUnsupported": [TxType.CLEAR_ON_MANAGER_START],
   b"ForcePowerDown": [TxType.CLEAR_ON_MANAGER_START],
-  
-  # HKG
-  b"LongControlEnabled": [TxType.PERSISTENT],
-  b"MadModeEnabled": [TxType.PERSISTENT],
-  b"AutoLaneChangeEnabled": [TxType.PERSISTENT],
-
-  # scc smoother
-  b"SccSmootherState": [TxType.PERSISTENT],
-  b"SccSmootherEnabled": [TxType.PERSISTENT],
-  b"SccSmootherSlowOnCurves": [TxType.PERSISTENT],
-  b"SccSmootherSyncGasPressed": [TxType.PERSISTENT],
-  b"SccSmootherSwitchGapOnly": [TxType.PERSISTENT],
-  b"ShowDebugUI": [TxType.PERSISTENT],
 }
 
 def ensure_bytes(v):
