@@ -69,10 +69,12 @@ class Controls:
       self.can_sock = messaging.sub_sock('can', timeout=can_timeout)
 
     # wait for one pandaState and one CAN packet
+    hw_type = messaging.recv_one(self.sm.sock['pandaState']).pandaState.pandaType
+    has_relay = hw_type in [PandaType.blackPanda, PandaType.uno, PandaType.dos]
     print("Waiting for CAN messages...")
     get_one_can(self.can_sock)
 
-    self.CI, self.CP = get_car(self.can_sock, self.pm.sock['sendcan'])
+    self.CI, self.CP = get_car(self.can_sock, self.pm.sock['sendcan'], has_relay)
 
     # read params
     params = Params()
@@ -144,7 +146,7 @@ class Controls:
     self.sm['driverMonitoringState'].faceDetected = False
     self.sm['liveParameters'].valid = True
 
-    self.startup_event = get_startup_event(car_recognized, controller_available)
+    self.startup_event = get_startup_event(car_recognized, controller_available, hw_type)
 
     if not sounds_available:
       self.events.add(EventName.soundsUnavailable, static=True)
@@ -546,9 +548,9 @@ class Controls:
 #   bellow 3Lines are for Wheel Rotation
     controlsState.vEgo = CS.vEgo
     controlsState.vEgoRaw = CS.vEgoRaw
-    controlsState.angleSteers = CS.steeringAngleDeg
     controlsState.steerOverride = CS.steeringPressed
 
+#   controlsState.angleSteers = CS.steeringAngleDeg
     controlsState.curvature = curvature
     controlsState.steeringAngleDesiredDeg = self.angle_steers_des
     controlsState.state = self.state
@@ -565,6 +567,7 @@ class Controls:
     controlsState.startMonoTime = int(start_time * 1e9)
     controlsState.forceDecel = bool(force_decel)
     controlsState.canErrorCounter = self.can_error_counter
+    controlsState.angleSteers = steer_angle_without_offset * CV.RAD_TO_DEG
     controlsState.roadLimitSpeed = self.road_limit_speed
     controlsState.roadLimitSpeedLeftDist = self.road_limit_left_dist
 
