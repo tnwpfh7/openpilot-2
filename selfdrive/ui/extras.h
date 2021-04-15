@@ -6,8 +6,9 @@
 static void ui_draw_extras_limit_speed(UIState *s)
 {
     const UIScene *scene = &s->scene;
-    int limit_speed = scene->controls_state.getRoadLimitSpeed();
-    int left_dist = scene->controls_state.getRoadLimitSpeedLeftDist();
+
+    int limit_speed = s->scene.controls_state.getRoadLimitSpeed();
+    int left_dist = s->scene.controls_state.getRoadLimitSpeedLeftDist();
 
     if(limit_speed > 10 && left_dist > 0)
     {
