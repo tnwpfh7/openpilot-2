@@ -131,8 +131,8 @@ class Controls:
     self.events_prev = []
     self.current_alert_types = [ET.PERMANENT]
     self.logged_comm_issue = False
-	
-    self.angle_steers_des = 0.	
+
+    self.angle_steers_des = 0.
     self.road_limit_speed = 0
     self.road_limit_left_dist = 0
     self.v_cruise_kph_limit = 0
@@ -251,10 +251,10 @@ class Controls:
 
     # TODO: fix simulator
     if not SIMULATION:
-      #if not NOSENSOR:
-        #if not self.sm['liveLocationKalman'].gpsOK and (self.distance_traveled > 1000) and not TICI:
+      if not NOSENSOR:
+        if not self.sm['liveLocationKalman'].gpsOK and (self.distance_traveled > 1000) and not TICI:
           # Not show in first 1 km to allow for driving out of garage. This event shows after 5 minutes
-          #self.events.add(EventName.noGps)
+          self.events.add(EventName.noGps)
       if not self.sm.all_alive(['roadCameraState', 'driverCameraState']) and (self.sm.frame > 5 / DT_CTRL):
         self.events.add(EventName.cameraMalfunction)
       if self.sm['modelV2'].frameDropPerc > 20:
