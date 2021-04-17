@@ -11,6 +11,12 @@
 #include "paint.hpp"
 #include "dashcam.h"
 
+int write_param_float(float param, const char* param_name, bool persistent_param) {
+  char s[16];
+  int size = snprintf(s, sizeof(s), "%f", param);
+  return Params(persistent_param).write_db_value(param_name, s, size < sizeof(s) ? size : sizeof(s));
+}
+
 // Projects a point in car to space to the corresponding point in full frame
 // image space.
 static bool calib_frame_to_full_frame(const UIState *s, float in_x, float in_y, float in_z, vertex_data *out) {
@@ -205,6 +211,11 @@ static void update_sockets(UIState *s) {
   }
   if (sm.updated("driverMonitoringState")) {
     scene.dmonitoring_state = sm["driverMonitoringState"].getDriverMonitoringState();
+    if(!scene.driver_view && !scene.ignition) {
+      read_param(&scene.driver_view, "IsDriverViewEnabled");
+    }
+  } else if ((sm.frame - sm.rcv_frame("driverMonitoringState")) > UI_FREQ/2) {
+    scene.driver_view = false;
   }
   if (sm.updated("sensorEvents")) {
     for (auto sensor : sm["sensorEvents"].getSensorEvents()) {
@@ -329,8 +340,8 @@ static void update_status(UIState *s) {
       s->status = STATUS_DISENGAGED;
       s->scene.started_frame = s->sm->frame;
 
-      s->scene.is_rhd = Params().getBool("IsRHD");
-      s->scene.end_to_end = Params().getBool("EndToEndToggle");
+      read_param(&s->scene.is_rhd, "IsRHD");
+      read_param(&s->scene.end_to_end, "EndToEndToggle");
       s->sidebar_collapsed = true;
       s->scene.alert_size = cereal::ControlsState::AlertSize::NONE;
       s->vipc_client = s->scene.driver_view ? s->vipc_client_front : s->vipc_client_rear;
