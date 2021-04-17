@@ -279,16 +279,15 @@ static void update_alert(UIState *s) {
 static void update_params(UIState *s) {
   const uint64_t frame = s->sm->frame;
   UIScene &scene = s->scene;
-  Params params;
+
   if (frame % (5*UI_FREQ) == 0) {
-    scene.is_metric = params.getBool("IsMetric");
+    read_param(&scene.is_metric, "IsMetric");
   } else if (frame % (6*UI_FREQ) == 0) {
     scene.athenaStatus = NET_DISCONNECTED;
-    if (auto last_ping = params.get<float>("LastAthenaPingTime"); last_ping) {
-      scene.athenaStatus = nanos_since_boot() - *last_ping < 70e9 ? NET_CONNECTED : NET_ERROR;
+    uint64_t last_ping = 0;
+    if (read_param(&last_ping, "LastAthenaPingTime") == 0) {
+      scene.athenaStatus = nanos_since_boot() - last_ping < 70e9 ? NET_CONNECTED : NET_ERROR;
     }
-  } else if (frame % (7*UI_FREQ) == 0) {
-	s->show_debug_ui = params.getBool("ShowDebugUI");
   }
 }
 
