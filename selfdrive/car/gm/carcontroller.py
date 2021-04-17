@@ -62,8 +62,9 @@ class CarController():
     # Gas/regen and brakes - all at 25Hz
     if (frame % 4) == 0:
       idx = (frame // 4) % 4
+
+      # Auto Hold State
       if CS.cruiseMain and not enabled and CS.autoHold and CS.autoHoldActive and not CS.out.gasPressed and CS.out.gearShifter == 'drive' and CS.out.vEgo < 0.01 and not CS.regenPaddlePressed:
-        # Auto Hold State
         car_stopping = apply_gas < P.ZERO_GAS
         standstill = CS.pcm_acc_status == AccState.STANDSTILL
 
@@ -83,20 +84,18 @@ class CarController():
 
         # Auto-resume from full stop by resetting ACC control
         acc_enabled = enabled
-      
         if standstill and not car_stopping:
           acc_enabled = False
-      
-        can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, apply_gas, idx, acc_enabled, at_full_stop))
 
-   
+        can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, apply_gas, idx, acc_enabled, at_full_stop))
 
     follow_level = CS.get_follow_level()
 
     # Send dashboard UI commands (ACC status), 25hz
     if (frame % 4) == 0:
       send_fcw = hud_alert == VisualAlert.fcw
-      can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, enabled, hud_v_cruise * CV.MS_TO_KPH, hud_show_car, send_fcw, follow_level))
+      can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, enabled, 
+                                                         hud_v_cruise * CV.MS_TO_KPH, hud_show_car, send_fcw, follow_level))
 
     # Radar needs to know current speed and yaw rate (50hz),
     # and that ADAS is alive (10hz)
