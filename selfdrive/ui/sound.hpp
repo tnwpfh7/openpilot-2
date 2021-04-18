@@ -1,7 +1,5 @@
 #pragma once
-
 #include <map>
-#include <QSoundEffect>
 #include "cereal/gen/cpp/log.capnp.h"
 
 typedef cereal::CarControl::HUDControl::AudibleAlert AudibleAlert;
@@ -15,17 +13,13 @@ static std::map<AudibleAlert, std::pair<const char *, int>> sound_map {
   {AudibleAlert::CHIME_WARNING2_REPEAT, {"../assets/sounds/warning_2.wav", 3}},
   {AudibleAlert::CHIME_WARNING_REPEAT, {"../assets/sounds/warning_repeat.wav", -1}},
   {AudibleAlert::CHIME_ERROR, {"../assets/sounds/error.wav", 0}},
-  {AudibleAlert::CHIME_PROMPT, {"../assets/sounds/error.wav", 0}},
-  {AudibleAlert::CHIME_SLOWING_DOWN_SPEED, {"../assets/sounds/slowing_down_speed.wav", 0}}
+  {AudibleAlert::CHIME_PROMPT, {"../assets/sounds/error.wav", 0}}
 };
 
 class Sound {
 public:
-  Sound();
-  void play(AudibleAlert alert);
-  void stop();
-  float volume = 0;
-
-private:
-  std::map<AudibleAlert, QSoundEffect> sounds;
+  virtual ~Sound() {}
+  virtual bool play(AudibleAlert alert) = 0;
+  virtual void stop() = 0;
+  virtual void setVolume(int volume) = 0;
 };
