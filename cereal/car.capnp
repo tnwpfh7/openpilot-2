@@ -53,6 +53,7 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     lowSpeedLockout @31;
     plannerError @32;
     debugAlert @34;
+    steerTempUnavailableMute @35;
     resumeRequired @36;
     preDriverDistracted @37;
     promptDriverDistracted @38;
@@ -64,6 +65,7 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     lowBattery @48;
     vehicleModelInvalid @50;
     accFaulted @51;
+
     sensorDataInvalid @52;
     commIssue @53;
     tooDistracted @54;
@@ -101,6 +103,16 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     processNotRunning @95;
     dashcamMode @96;
 
+    #Autohold Activate
+    autoHoldActivated @97;
+
+    #Enable greyPanda
+    startupGreyPanda @98;
+
+    #Road speed Limiter
+    slowingDownSpeed @99;
+    slowingDownSpeedSound @100;
+    
     radarCanErrorDEPRECATED @15;
     radarCommIssueDEPRECATED @67;
     gasUnavailableDEPRECATED @3;
@@ -120,7 +132,6 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     neosUpdateRequiredDEPRECATED @88;
     modelLagWarningDEPRECATED @93;
     startupOneplusDEPRECATED @82;
-    steerTempUnavailableMuteDEPRECATED @35;
   }
 }
 
@@ -180,12 +191,20 @@ struct CarState {
   # clutch (manual transmission only)
   clutchPressed @28 :Bool;
 
+  #Kegman 3Bar Distance Profile
+  readdistancelines @37 :Float32;
+  lkMode @38 :Bool;
+  engineRPM @39 :Float32;
+
   # which packets this state came from
   canMonoTimes @12: List(UInt64);
 
   # blindspot sensors
   leftBlindspot @33 :Bool; # Is there something blocking the left lane change
   rightBlindspot @34 :Bool; # Is there something blocking the right lane change
+
+  # Autohold for GM
+  autoHoldActivated @40 :Bool;
 
   struct WheelSpeeds {
     # optional wheel speeds
@@ -326,6 +345,9 @@ struct CarControl {
       seatbeltUnbuckled @5;
       speedTooHigh @6;
       ldw @7;
+
+      # Autohold Event
+      autoHoldActivated @8;
     }
 
     enum AudibleAlert {
@@ -338,6 +360,7 @@ struct CarControl {
       chimeWarningRepeat @6;
       chimePrompt @7;
       chimeWarning2Repeat @8;
+      chimeSlowingDownSpeed @9;
     }
   }
 
@@ -427,7 +450,11 @@ struct CarParams {
     kpV @1 :List(Float32);
     kiBP @2 :List(Float32);
     kiV @3 :List(Float32);
-    kf @4 :Float32;
+    kf @6 :Float32;
+
+    #D gain
+    kdBP @4 :List(Float32);
+    kdV @5 :List(Float32);
   }
 
   struct LongitudinalPIDTuning {
@@ -435,8 +462,9 @@ struct CarParams {
     kpV @1 :List(Float32);
     kiBP @2 :List(Float32);
     kiV @3 :List(Float32);
-    deadzoneBP @4 :List(Float32);
-    deadzoneV @5 :List(Float32);
+    kf @4 :Float32;
+    deadzoneBP @5 :List(Float32);
+    deadzoneV @6 :List(Float32);
   }
 
   struct LateralINDITuning {
