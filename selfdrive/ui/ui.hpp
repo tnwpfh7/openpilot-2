@@ -56,6 +56,7 @@ typedef struct Rect {
 
 const int sbr_w = 300;
 const int bdr_s = 30;
+const int bdr_is = 30;
 const int header_h = 420;
 const int footer_h = 280;
 const Rect settings_btn = {50, 35, 200, 117};
@@ -130,8 +131,10 @@ typedef struct UIScene {
   cereal::ControlsState::Reader controls_state;
   cereal::DriverState::Reader driver_state;
   cereal::DriverMonitoringState::Reader dmonitoring_state;
+  cereal::ModelDataV2::Reader model;
 
   // gps
+  float gpsAccuracy;
   int satelliteCount;
   bool gpsOK;
 
@@ -151,6 +154,7 @@ typedef struct UIScene {
   
   // neokii dev UI
   cereal::CarControl::Reader car_control;
+  cereal::LateralPlan::Reader lateral_plan;
   cereal::CarParams::Reader car_params;
   cereal::GpsLocationData::Reader gps_ext;
   cereal::LiveParametersData::Reader live_params;

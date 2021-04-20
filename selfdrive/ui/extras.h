@@ -6,8 +6,9 @@
 static void ui_draw_extras_limit_speed(UIState *s)
 {
     const UIScene *scene = &s->scene;
-    int limit_speed = scene->controls_state.getRoadLimitSpeed();
-    int left_dist = scene->controls_state.getRoadLimitSpeedLeftDist();
+
+    int limit_speed = s->scene.controls_state.getRoadLimitSpeed();
+    int left_dist = s->scene.controls_state.getRoadLimitSpeedLeftDist();
 
     if(limit_speed > 5 && left_dist > 0)
     {
@@ -30,7 +31,7 @@ static void ui_draw_extras_limit_speed(UIState *s)
         nvgFillColor(s->vg, nvgRGBA(255, 255, 255, 250));
 
         nvgFontSize(s->vg, 140);
-        nvgFontFaceId(s->vg, s->font_sans_bold);
+        nvgFontFace(s->vg, "sans-bold");
         nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
         snprintf(str, sizeof(str), "%d", limit_speed);

@@ -1,13 +1,13 @@
-from common.numpy_fast import interp
+from common.numpy_fast import interp, clip, mean
 import numpy as np
 from selfdrive.hardware import EON, TICI
 from cereal import log
-
+from selfdrive.ntune import ntune_get
 
 TRAJECTORY_SIZE = 33
 # camera offset is meters from center car to camera
 if EON:
-  CAMERA_OFFSET = 0.06
+  CAMERA_OFFSET = 0.02
   PATH_OFFSET = 0.0
 elif TICI:
   CAMERA_OFFSET = -0.04
@@ -23,9 +23,9 @@ class LanePlanner:
     self.ll_x = np.zeros((TRAJECTORY_SIZE,))
     self.lll_y = np.zeros((TRAJECTORY_SIZE,))
     self.rll_y = np.zeros((TRAJECTORY_SIZE,))
-    self.lane_width_estimate = 3.7
+    self.lane_width_estimate = 3.5
     self.lane_width_certainty = 1.0
-    self.lane_width = 3.7
+    self.lane_width = 3.5
 
     self.lll_prob = 0.
     self.rll_prob = 0.
@@ -37,7 +37,6 @@ class LanePlanner:
     self.l_lane_change_prob = 0.
     self.r_lane_change_prob = 0.
 
-    self.camera_offset = -CAMERA_OFFSET if wide_camera else CAMERA_OFFSET
     self.path_offset = -PATH_OFFSET if wide_camera else PATH_OFFSET
 
   def parse_model(self, md):
@@ -46,8 +45,9 @@ class LanePlanner:
       # left and right ll x is the same
       self.ll_x = md.laneLines[1].x
       # only offset left and right lane lines; offsetting path does not make sense
-      self.lll_y = np.array(md.laneLines[1].y) - self.camera_offset
-      self.rll_y = np.array(md.laneLines[2].y) - self.camera_offset
+      cameraOffset = ntune_get("cameraOffset")
+      self.lll_y = np.array(md.laneLines[1].y) - cameraOffset
+      self.rll_y = np.array(md.laneLines[2].y) - cameraOffset
       self.lll_prob = md.laneLineProbs[1]
       self.rll_prob = md.laneLineProbs[2]
       self.lll_std = md.laneLineStds[1]
@@ -90,6 +90,11 @@ class LanePlanner:
     path_from_right_lane = self.rll_y - clipped_lane_width / 2.0
 
     self.d_prob = l_prob + r_prob - l_prob * r_prob
+
+    # neokii
+    if self.d_prob > 0.65:
+      self.d_prob = min(self.d_prob * 1.35, 1.0)
+
     lane_path_y = (l_prob * path_from_left_lane + r_prob * path_from_right_lane) / (l_prob + r_prob + 0.0001)
     lane_path_y_interp = np.interp(path_t, self.ll_t, lane_path_y)
     path_xyz[:,1] = self.d_prob * lane_path_y_interp + (1.0 - self.d_prob) * path_xyz[:,1]

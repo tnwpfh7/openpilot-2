@@ -31,6 +31,7 @@ class CarInterfaceBase():
       self.cp = self.CS.get_can_parser(CP)
       self.cp_cam = self.CS.get_cam_can_parser(CP)
       self.cp_body = self.CS.get_body_can_parser(CP)
+      self.cp_chassis = self.CS.get_chassis_can_parser(CP) #this line for brakeLights
 
     self.CC = None
     if CarController is not None:
@@ -196,4 +197,9 @@ class CarStateBase:
 
   @staticmethod
   def get_body_can_parser(CP):
+    return None
+
+#bellows are for brakeLights
+  @staticmethod
+  def get_chassis_can_parser(CP):
     return None

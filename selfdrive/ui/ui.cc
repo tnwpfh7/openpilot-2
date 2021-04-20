@@ -143,7 +143,7 @@ static void update_model(UIState *s, const cereal::ModelDataV2::Reader &model) {
   update_line_data(s, model_position, 0.5, 1.22, &scene.track_vertices, max_idx);
 }
 
-static void update_sockets(UIState *s){
+static void update_sockets(UIState *s) {
   SubMaster &sm = *(s->sm);
   sm.update(0);
 }
@@ -190,6 +190,8 @@ static void update_state(UIState *s) {
   }
   if (sm.updated("deviceState")) {
     scene.deviceState = sm["deviceState"].getDeviceState();
+    scene.cpuTemp = scene.deviceState.getCpuTempC()[0];
+    scene.cpuPerc = scene.deviceState.getCpuUsagePercent();
   }
   if (sm.updated("pandaState")) {
     auto pandaState = sm["pandaState"].getPandaState();
@@ -204,6 +206,17 @@ static void update_state(UIState *s) {
       scene.satelliteCount = data.getMeasurementReport().getNumMeas();
     }
   }
+
+  if (sm.updated("gpsLocationExternal")) {
+    auto data = sm["gpsLocationExternal"].getGpsLocationExternal();
+    s->scene.gpsAccuracy = data.getAccuracy();
+
+    if (s->scene.gpsAccuracy > 100)
+      s->scene.gpsAccuracy = 99.99;
+    else if (s->scene.gpsAccuracy == 0)
+      s->scene.gpsAccuracy = 99.8;
+  }  
+  
   if (sm.updated("liveLocationKalman")) {
     scene.gpsOK = sm["liveLocationKalman"].getLiveLocationKalman().getGpsOK();
   }
@@ -362,8 +375,6 @@ static void update_extras(UIState *s)
    if(sm.updated("carControl"))
     scene.car_control = sm["carControl"].getCarControl();
 
-   if(sm.updated("gpsLocationExternal"))
-    scene.gps_ext = sm["gpsLocationExternal"].getGpsLocationExternal();
 
    if(sm.updated("liveParameters"))
     scene.live_params = sm["liveParameters"].getLiveParameters();
