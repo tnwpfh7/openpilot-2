@@ -9,6 +9,7 @@
 #include "common/visionimg.h"
 #include "ui.hpp"
 #include "paint.hpp"
+#include "dashcam.h"
 
 // Projects a point in car to space to the corresponding point in full frame
 // image space.
@@ -53,7 +54,7 @@ void ui_init(UIState *s) {
 #ifdef QCOM2
     "roadCameraState",
 #endif
-  });
+    "carControl", "gpsLocationExternal", "liveParameters"});
 
   s->scene.started = false;
   s->status = STATUS_OFFROAD;
@@ -71,6 +72,8 @@ void ui_init(UIState *s) {
   s->vipc_client_rear = new VisionIpcClient("camerad", s->wide_camera ? VISION_STREAM_RGB_WIDE : VISION_STREAM_RGB_BACK, true);
   s->vipc_client_front = new VisionIpcClient("camerad", VISION_STREAM_RGB_FRONT, true);
   s->vipc_client = s->vipc_client_rear;
+
+  touch_init(&(s->touch));
 }
 
 static int get_path_length_idx(const cereal::ModelDataV2::XYZTData::Reader &line, const float path_height) {
@@ -151,9 +154,12 @@ static void update_state(UIState *s) {
   UIScene &scene = s->scene;
   if (scene.started && sm.updated("controlsState")) {
     scene.controls_state = sm["controlsState"].getControlsState();
+    s->scene.angleSteers  = scene.controls_state.getAngleSteers();
   }
   if (sm.updated("carState")) {
     scene.car_state = sm["carState"].getCarState();
+    s->scene.brakeLights = scene.car_state.getBrakeLights();
+    s->scene.engineRPM = scene.car_state.getEngineRPM();
   }
   if (sm.updated("radarState")) {
     std::optional<cereal::ModelDataV2::XYZTData::Reader> line;
@@ -202,6 +208,7 @@ static void update_state(UIState *s) {
     scene.gpsOK = sm["liveLocationKalman"].getLiveLocationKalman().getGpsOK();
   }
   if (sm.updated("carParams")) {
+    scene.car_params = sm["carParams"].getCarParams();
     scene.longitudinal_control = sm["carParams"].getCarParams().getOpenpilotLongitudinalControl();
   }
   if (sm.updated("driverState")) {
@@ -347,10 +354,33 @@ static void update_status(UIState *s) {
   started_prev = s->scene.started;
 }
 
+static void update_extras(UIState *s)
+{
+   UIScene &scene = s->scene;
+   SubMaster &sm = *(s->sm);
+
+   if(sm.updated("carControl"))
+    scene.car_control = sm["carControl"].getCarControl();
+
+   if(sm.updated("gpsLocationExternal"))
+    scene.gps_ext = sm["gpsLocationExternal"].getGpsLocationExternal();
+
+   if(sm.updated("liveParameters"))
+    scene.live_params = sm["liveParameters"].getLiveParameters();
+
+   if(s->awake && s->status != STATUS_OFFROAD)
+   {
+        int touch_x = -1, touch_y = -1;
+        int touched = touch_poll(&(s->touch), &touch_x, &touch_y, 0);
+        dashcam(s, touch_x, touch_y);
+   }
+}
+
 void ui_update(UIState *s) {
   update_params(s);
   update_sockets(s);
   update_state(s);
+  update_extras(s);  
   update_status(s);
   update_alert(s);
   update_vision(s);
