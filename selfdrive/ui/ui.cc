@@ -43,6 +43,8 @@ static void ui_init_vision(UIState *s) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
   }
   assert(glGetError() == GL_NO_ERROR);
+
+  s->scene.recording = false;
 }
 
 
@@ -53,7 +55,7 @@ void ui_init(UIState *s) {
 #ifdef QCOM2
     "roadCameraState",
 #endif
-  });
+    "carControl", "gpsLocationExternal", "liveParameters"});
 
   s->scene.started = false;
   s->status = STATUS_OFFROAD;
@@ -202,6 +204,7 @@ static void update_state(UIState *s) {
     scene.gpsOK = sm["liveLocationKalman"].getLiveLocationKalman().getGpsOK();
   }
   if (sm.updated("carParams")) {
+    scene.car_params = sm["carParams"].getCarParams();
     scene.longitudinal_control = sm["carParams"].getCarParams().getOpenpilotLongitudinalControl();
   }
   if (sm.updated("driverState")) {

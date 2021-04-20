@@ -21,6 +21,7 @@
 
 #include "common/mat.h"
 #include "common/visionimg.h"
+#include "common/framebuffer.h"
 #include "common/modeldata.h"
 #include "common/params.h"
 #include "common/glutil.h"
@@ -36,6 +37,9 @@
 #define COLOR_RED_ALPHA(x) nvgRGBA(201, 34, 49, x)
 #define COLOR_YELLOW nvgRGBA(218, 202, 37, 255)
 #define COLOR_RED nvgRGBA(201, 34, 49, 255)
+#define COLOR_OCHRE nvgRGBA(218, 111, 37, 255)
+#define COLOR_GREEN_ALPHA(x) nvgRGBA(0, 255, 0, x)
+#define COLOR_BLUE_ALPHA(x) nvgRGBA(0, 0, 255, x)
 
 #define UI_BUF_COUNT 4
 
@@ -52,6 +56,7 @@ typedef struct Rect {
 
 const int sbr_w = 300;
 const int bdr_s = 30;
+const int bdr_is = 30;
 const int header_h = 420;
 const int footer_h = 280;
 const Rect settings_btn = {50, 35, 200, 117};
@@ -98,6 +103,16 @@ typedef struct UIScene {
   bool is_rhd;
   bool driver_view;
 
+  float angleSteers;
+  int engineRPM;
+  bool recording;
+
+  int lead_status;
+  float lead_d_rel, lead_v_rel;
+
+  float cpuTemp;
+  int cpuUsagePercent;
+
   std::string alert_text1;
   std::string alert_text2;
   std::string alert_type;
@@ -113,8 +128,10 @@ typedef struct UIScene {
   cereal::ControlsState::Reader controls_state;
   cereal::DriverState::Reader driver_state;
   cereal::DriverMonitoringState::Reader dmonitoring_state;
+  cereal::ModelDataV2::Reader model;
 
   // gps
+  float gpsAccuracy;
   int satelliteCount;
   bool gpsOK;
 
@@ -124,6 +141,13 @@ typedef struct UIScene {
   line_vertices_data track_vertices;
   line_vertices_data lane_line_vertices[4];
   line_vertices_data road_edge_vertices[2];
+
+  // neokii dev UI
+  cereal::CarControl::Reader car_control;
+  cereal::LateralPlan::Reader lateral_plan;
+  cereal::CarParams::Reader car_params;
+  cereal::GpsLocationData::Reader gps_ext; 
+  cereal::LiveParametersData::Reader live_params;
 
   // lead
   vertex_data lead_vertices[2];
@@ -140,15 +164,18 @@ typedef struct UIState {
   VisionBuf * last_frame;
 
   // framebuffer
+  std::unique_ptr<FrameBuffer> fb;
   int fb_w, fb_h;
 
   // NVG
   NVGcontext *vg;
+  int font_sans_bold;
 
   // images
   std::map<std::string, int> images;
 
   SubMaster *sm;
+  PubMaster *pm;
 
   Sound *sound;
   UIStatus status;
@@ -164,6 +191,7 @@ typedef struct UIState {
   // device state
   bool awake;
 
+  bool ui_debug;
   bool sidebar_collapsed;
   Rect video_rect, viz_rect;
   float car_space_transform[6];
