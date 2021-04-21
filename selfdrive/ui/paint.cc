@@ -303,9 +303,9 @@ static void bb_ui_draw_debug(UIState *s)
     snprintf(str, sizeof(str), "Batt Temp: %.0f°C", scene->deviceState.getBatteryTempC());
     ui_draw_text(s, text_x2, y2, str, 25 * 2.5, textColor, "sans-regular");
     y2 += height2;
-//
-//    snprintf(str, sizeof(str), "Engine RPM: %d", (s->scene.engineRPM));
-//    ui_draw_text(s, text_x2, y2, str, 25 * 2.5, textColor, "sans-regular");
+
+    snprintf(str, sizeof(str), "Engine RPM: %d", (s->scene.engineRPM));
+    ui_draw_text(s, text_x2, y2, str, 25 * 2.5, textColor, "sans-regular");
 }
 
 static void ui_draw_vision_brake(UIState *s) {
