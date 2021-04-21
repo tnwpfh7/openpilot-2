@@ -317,7 +317,7 @@ static void ui_draw_vision_brake(UIState *s) {
   const int brake_img_x = (brake_x - (brake_img_size / 2));
   const int brake_img_y = (brake_y - (brake_size / 4));
 
-  bool brake_valid = scene->car_state.getBrakeLights();
+  bool brake_valid = s->scene.brakeLights; // scene->car_state.getBrakeLights()
   float brake_img_alpha = brake_valid ? 1.0f : 0.15f;
   float brake_bg_alpha = brake_valid ? 0.3f : 0.1f;
   NVGcolor brake_bg = nvgRGBA(0, 0, 0, (255 * brake_bg_alpha));
