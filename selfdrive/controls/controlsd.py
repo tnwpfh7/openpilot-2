@@ -26,6 +26,7 @@ from selfdrive.controls.lib.longitudinal_planner import LON_MPC_STEP
 from selfdrive.locationd.calibrationd import Calibration
 from selfdrive.hardware import HARDWARE, TICI
 from selfdrive.ntune import ntune_get, ntune_isEnabled
+from selfdrive.road_speed_limiter import road_speed_limiter_get_max_speed
 
 LDW_MIN_SPEED = 31 * CV.MPH_TO_MS
 LANE_DEPARTURE_THRESHOLD = 0.1
@@ -132,6 +133,9 @@ class Controls:
     self.current_alert_types = [ET.PERMANENT]
     self.logged_comm_issue = False
     self.angle_steers_des = 0.
+    self.road_limit_speed = 0
+    self.road_limit_left_dist = 0
+    self.v_cruise_kph_limit = 0
 
     self.sm['liveCalibration'].calStatus = Calibration.CALIBRATED
     self.sm['deviceState'].freeSpacePercent = 100
@@ -308,6 +312,17 @@ class Controls:
     elif self.CP.enableCruise and CS.cruiseState.enabled:
       self.v_cruise_kph = CS.cruiseState.speed * CV.MS_TO_KPH
 
+    limit_speed, self.road_limit_speed, self.road_limit_left_dist, first_started, log = road_speed_limiter_get_max_speed(CS, self.v_cruise_kph)
+
+    if limit_speed > 20:
+      self.v_cruise_kph_limit = min(limit_speed, self.v_cruise_kph)
+
+      if limit_speed < CS.vEgo * CV.MS_TO_KPH:
+        self.events.add(EventName.slowingDownSpeed)
+
+    else:
+      self.v_cruise_kph_limit = self.v_cruise_kph
+
     # decrease the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state
     self.soft_disable_timer = max(0, self.soft_disable_timer - 1)
@@ -461,7 +476,7 @@ class Controls:
     CC.cruiseControl.speedOverride = float(speed_override if self.CP.enableCruise else 0.0)
     CC.cruiseControl.accelOverride = self.CI.calc_accel_override(CS.aEgo, self.sm['longitudinalPlan'].aTarget, CS.vEgo, self.sm['longitudinalPlan'].vTarget)
 
-    CC.hudControl.setSpeed = float(self.v_cruise_kph * CV.KPH_TO_MS)
+    CC.hudControl.setSpeed = float(self.v_cruise_kph_limit * CV.KPH_TO_MS)
     CC.hudControl.speedVisible = self.enabled
     CC.hudControl.lanesVisible = self.enabled
     CC.hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
@@ -542,7 +557,7 @@ class Controls:
     controlsState.engageable = not self.events.any(ET.NO_ENTRY)
     controlsState.longControlState = self.LoC.long_control_state
     controlsState.vPid = float(self.LoC.v_pid)
-    controlsState.vCruise = float(self.v_cruise_kph)
+    controlsState.vCruise = float(self.v_cruise_kph_limit)
     controlsState.upAccelCmd = float(self.LoC.pid.p)
     controlsState.uiAccelCmd = float(self.LoC.pid.i)
     controlsState.ufAccelCmd = float(self.LoC.pid.f)
@@ -553,6 +568,9 @@ class Controls:
     controlsState.forceDecel = bool(force_decel)
     controlsState.canErrorCounter = self.can_error_counter
     controlsState.angleSteers = steer_angle_without_offset * CV.RAD_TO_DEG
+    controlsState.roadLimitSpeed = self.road_limit_speed
+    controlsState.roadLimitSpeedLeftDist = self.road_limit_left_dist
+
 # display SR/SRC/SAD on Ui
     controlsState.steerRatio = self.VM.sR
     controlsState.steerRateCost = ntune_get('steerRateCost')
