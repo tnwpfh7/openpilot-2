@@ -14,7 +14,6 @@ ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 
 class CarInterface(CarInterfaceBase):
-
   @staticmethod
   def compute_gb(accel, speed):
   	# Ripped from compute_gb_honda in Honda's interface.py. Works well off shelf but may need more tuning
@@ -71,7 +70,7 @@ class CarInterface(CarInterfaceBase):
     # or camera is on powertrain bus (LKA cars without ACC).
     ret.enableCamera = True
     ret.openpilotLongitudinalControl = ret.enableCamera
-    tire_stiffness_factor = 0.644  # not optimized yet
+    tire_stiffness_factor = 0.6444  # not optimized yet
 
     # Start with a baseline lateral tuning for all GM vehicles. Override tuning as needed in each model section below.
     ret.minSteerSpeed = 7 * CV.MPH_TO_MS
@@ -215,6 +214,7 @@ class CarInterface(CarInterfaceBase):
       events.add(EventName.belowEngageSpeed)
     if self.CS.park_brake:
       events.add(EventName.parkBrake)
+
     if self.CS.autoHoldActivated:
       events.add(car.CarEvent.EventName.autoHoldActivated)
 
@@ -242,6 +242,10 @@ class CarInterface(CarInterfaceBase):
       events.add(EventName.parkBrake)
     if ret.cruiseState.standstill:
       events.add(EventName.resumeRequired)
+    if self.CS.pcm_acc_status == AccState.FAULTED:
+      events.add(EventName.accFaulted)
+    if ret.vEgo < self.CP.minSteerSpeed:
+      events.add(car.CarEvent.EventName.belowSteerSpeed)
 
     # handle button presses
     for b in ret.buttonEvents:
