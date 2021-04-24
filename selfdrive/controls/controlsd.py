@@ -69,8 +69,8 @@ class Controls:
       self.can_sock = messaging.sub_sock('can', timeout=can_timeout)
 
     # wait for one pandaState and one CAN packet
-    panda_type = messaging.recv_one(self.sm.sock['pandaState']).pandaState.pandaType
-    has_relay = panda_type in [PandaType.blackPanda, PandaType.uno, PandaType.dos]
+    hw_type = messaging.recv_one(self.sm.sock['pandaState']).pandaState.pandaType
+    has_relay = hw_type in [PandaType.blackPanda, PandaType.uno, PandaType.dos]
     print("Waiting for CAN messages...")
     get_one_can(self.can_sock)
 
@@ -146,7 +146,7 @@ class Controls:
     self.sm['driverMonitoringState'].faceDetected = False
     self.sm['liveParameters'].valid = True
 
-    self.startup_event = get_startup_event(car_recognized, controller_available)
+    self.startup_event = get_startup_event(car_recognized, controller_available, hw_type)
 
     if not sounds_available:
       self.events.add(EventName.soundsUnavailable, static=True)
@@ -154,6 +154,8 @@ class Controls:
       self.events.add(EventName.communityFeatureDisallowed, static=True)
     if not car_recognized:
       self.events.add(EventName.carUnrecognized, static=True)
+    if hw_type == PandaType.greyPanda:
+      self.events.add(EventName.startupGreyPanda, static=True)
     elif self.read_only:
       self.events.add(EventName.dashcamMode, static=True)
 

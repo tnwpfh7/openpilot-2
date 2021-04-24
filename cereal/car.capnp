@@ -579,5 +579,5 @@ struct CarParams {
     gateway @1;    # Integration at vehicle's CAN gateway
   }
 
-  isPandaBlackDEPRECATED @39: Bool;
+  isPandaBlack @39: Bool;
 }
