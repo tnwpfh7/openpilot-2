@@ -154,9 +154,9 @@ class Controls:
       self.events.add(EventName.communityFeatureDisallowed, static=True)
     if not car_recognized:
       self.events.add(EventName.carUnrecognized, static=True)
-    if hw_type == PandaType.greyPanda:
+#    if hw_type == PandaType.greyPanda:
 #      self.events.add(EventName.startupGreyPanda, static=True)
-#    elif self.read_only:
+    elif self.read_only:
       self.events.add(EventName.dashcamMode, static=True)
 
     # controlsd is driven by can recv, expected at 100Hz
@@ -238,8 +238,6 @@ class Controls:
 #        self.logged_comm_issue = True
 #    else:
 #      self.logged_comm_issue = False
-    elif not self.sm.all_alive_and_valid() and self.sm.frame > 5 / DT_CTRL:
-      self.events.add(EventName.commIssue)
 
     if not self.sm['lateralPlan'].mpcSolutionValid:
       self.events.add(EventName.plannerError)
