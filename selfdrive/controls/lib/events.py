@@ -200,7 +200,7 @@ def no_gps_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool) -> Al
     "Poor GPS reception",
     "If sky is visible, contact support" if gps_integrated else "Check GPS antenna placement",
     AlertStatus.normal, AlertSize.mid,
-    Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., .2, creation_delay=300.)
+    Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., .2)
 
 def wrong_car_mode_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool) -> Alert:
   text = "Cruise Mode Disabled"
@@ -249,6 +249,14 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
     ET.PERMANENT: Alert(
       "Dashcam mode for unsupported car",
       "Always keep hands on wheel and eyes on road",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 2.),
+  },
+
+  EventName.startupGreyPanda: {
+    ET.PERMANENT: Alert(
+      "WARNING: Grey panda is not supported.",
+      "But Kegman re-enabled it.  Enjoy.",
       AlertStatus.normal, AlertSize.mid,
       Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 2.),
   },
