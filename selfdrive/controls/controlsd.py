@@ -236,6 +236,8 @@ class Controls:
 #        self.logged_comm_issue = True
 #    else:
 #      self.logged_comm_issue = False
+    elif not self.sm.all_alive_and_valid() and self.sm.frame > 5 / DT_CTRL:
+      self.events.add(EventName.commIssue)
 
     if not self.sm['lateralPlan'].mpcSolutionValid:
       self.events.add(EventName.plannerError)
