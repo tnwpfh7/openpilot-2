@@ -154,6 +154,8 @@ class Controls:
       self.events.add(EventName.communityFeatureDisallowed, static=True)
     if not car_recognized:
       self.events.add(EventName.carUnrecognized, static=True)
+#    if hw_type == PandaType.greyPanda:
+#      self.events.add(EventName.startupGreyPanda, static=True)
     elif self.read_only:
       self.events.add(EventName.dashcamMode, static=True)
 
