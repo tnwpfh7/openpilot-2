@@ -3,19 +3,42 @@ import math
 from selfdrive.controls.lib.pid import PIController
 from selfdrive.controls.lib.drive_helpers import get_steer_max
 from cereal import log
+from selfdrive.kegman_kans_conf import kegman_kans_conf
 
 
 class LatControlPID():
   def __init__(self, CP):
+    self.kegman_kans = kegman_kans_conf(CP)
+    self.deadzone = float(self.kegman_kans.conf['deadzone'])
     self.pid = PIController((CP.lateralTuning.pid.kpBP, CP.lateralTuning.pid.kpV),
                             (CP.lateralTuning.pid.kiBP, CP.lateralTuning.pid.kiV),
                             k_f=CP.lateralTuning.pid.kf, pos_limit=1.0, neg_limit=-1.0,
                             sat_limit=CP.steerLimitTimer)
+    self.mpc_frame = 0
 
   def reset(self):
     self.pid.reset()
+    
+  def live_tune(self, CP):
+    self.mpc_frame += 1
+    if self.mpc_frame % 300 == 0:
+      # live tuning through /data/openpilot/tune.py overrides interface.py settings
+      self.kegman_kans = kegman_kans_conf()
+      if self.kegman_kans.conf['tuneGernby'] == "1":
+        self.steerKpV = [float(self.kegman_kans.conf['Kp'])]
+        self.steerKiV = [float(self.kegman_kans.conf['Ki'])]
+        self.steerKf = float(self.kegman_kans.conf['Kf'])
+        self.steerLimitTimer = float(self.kegman_kans.conf['steerLimitTimer'])
+        self.pid = PIController((CP.lateralTuning.pid.kpBP, self.steerKpV),
+                            (CP.lateralTuning.pid.kiBP, self.steerKiV),
+                            k_f=self.steerKf, pos_limit=1.0, neg_limit=-1.0,
+                            sat_limit=self.steerLimitTimer)
+        self.deadzone = float(self.kegman_kans.conf['deadzone'])
+        
+      self.mpc_frame = 0    
 
   def update(self, active, CS, CP, VM, params, lat_plan):
+    self.live_tune(CP)
     pid_log = log.ControlsState.LateralPIDState.new_message()
     pid_log.steeringAngleDeg = float(CS.steeringAngleDeg)
     pid_log.steeringRateDeg = float(CS.steeringRateDeg)
@@ -35,8 +58,7 @@ class LatControlPID():
       # TODO: feedforward something based on lat_plan.rateSteers
       steer_feedforward = angle_steers_des_no_offset  # offset does not contribute to resistive torque
       steer_feedforward *= CS.vEgo**2  # proportional to realigning tire momentum (~ lateral accel)
-
-      deadzone = 0.0
+      deadzone = self.deadzone
 
       check_saturation = (CS.vEgo > 10) and not CS.steeringRateLimited and not CS.steeringPressed
       output_steer = self.pid.update(angle_steers_des, CS.steeringAngleDeg, check_saturation=check_saturation, override=CS.steeringPressed,
