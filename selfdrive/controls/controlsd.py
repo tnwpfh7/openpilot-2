@@ -231,13 +231,13 @@ class Controls:
 
     if len(self.sm['radarState'].radarErrors):
       self.events.add(EventName.radarFault)
-#    elif not self.sm.all_alive_and_valid():
-#      self.events.add(EventName.commIssue)
-#      if not self.logged_comm_issue:
-#        cloudlog.error(f"commIssue - valid: {self.sm.valid} - alive: {self.sm.alive}")
-#        self.logged_comm_issue = True
-#    else:
-#      self.logged_comm_issue = False
+    #elif not self.sm.all_alive_and_valid():
+      #self.events.add(EventName.commIssue)
+      #if not self.logged_comm_issue:
+        #cloudlog.error(f"commIssue - valid: {self.sm.valid} - alive: {self.sm.alive}")
+        #self.logged_comm_issue = True
+    else:
+      self.logged_comm_issue = False
 
     if not self.sm['lateralPlan'].mpcSolutionValid:
       self.events.add(EventName.plannerError)
