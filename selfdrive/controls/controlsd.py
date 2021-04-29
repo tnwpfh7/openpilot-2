@@ -236,10 +236,8 @@ class Controls:
 #      if not self.logged_comm_issue:
 #        cloudlog.error(f"commIssue - valid: {self.sm.valid} - alive: {self.sm.alive}")
 #        self.logged_comm_issue = True
-#    else:
-#      self.logged_comm_issue = False
-    elif not self.sm.all_alive_and_valid() and self.sm.frame > 5 / DT_CTRL:
-      self.events.add(EventName.commIssue)
+    else:
+      self.logged_comm_issue = False
 
     if not self.sm['lateralPlan'].mpcSolutionValid:
       self.events.add(EventName.plannerError)
