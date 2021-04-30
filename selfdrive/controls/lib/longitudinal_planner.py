@@ -41,8 +41,8 @@ _A_TOTAL_MAX_V = [3.5, 4.0, 5.0]
 _A_TOTAL_MAX_BP = [0., 25., 55.]
 
 # Lookup table for turns original - used when slowOnCurves = 1 from kegman.json
-_A_TOTAL_MAX_V_SOC = [1.7, 3.2]
-_A_TOTAL_MAX_BP_SOC = [20., 40.]
+_A_TOTAL_MAX_V_SOC = [1.7, 2.5, 3.2]
+_A_TOTAL_MAX_BP_SOC = [20., 25., 40.]
 
 
 
@@ -71,7 +71,7 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
   else:
     a_total_max = interp(v_ego, _A_TOTAL_MAX_BP, _A_TOTAL_MAX_V)
   
-  a_y = v_ego**2 * angle_steers * CV.DEG_TO_RAD / (CP.steerRatio * CP.wheelbase)
+  a_y = v_ego**2 * angle_steers * CV.DEG_TO_RAD / (CP.steerRatio * CP.wheelbase) * 0.75
   a_x_allowed = math.sqrt(max(a_total_max**2 - a_y**2, 0.))
 
   
