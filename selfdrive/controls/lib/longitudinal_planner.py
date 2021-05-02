@@ -5,7 +5,6 @@ from common.params import Params
 from common.numpy_fast import interp
 
 import cereal.messaging as messaging
-from cereal import car
 from common.realtime import sec_since_boot
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
@@ -102,20 +101,11 @@ class Planner():
     self.fcw = False
 
     self.params = Params()
-    self.kegman_kans = kegman_kans_conf()
-    self.mpc_frame = 0
     self.first_loop = True
-
-    self.slow_on_curve = False
-    self.v_model = 0.0
-    self.a_model = 0.0
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
-      if self.slow_on_curve:
-        solutions = {'model': self.v_model, 'cruise': self.v_cruise}
-      else:
-        solutions = {'cruise': self.v_cruise}
+      solutions = {'cruise': self.v_cruise}
       if self.mpc1.prev_lead_status:
         solutions['mpc1'] = self.mpc1.v_mpc
       if self.mpc2.prev_lead_status:
@@ -134,13 +124,10 @@ class Planner():
       elif slowest == 'cruise':
         self.v_acc = self.v_cruise
         self.a_acc = self.a_cruise
-      elif self.slow_on_curve and slowest == 'model':
-        self.v_acc = self.v_model
-        self.a_acc = self.a_model
 
     self.v_acc_future = min([self.mpc1.v_mpc_future, self.mpc2.v_mpc_future, v_cruise_setpoint])
 
-  def update(self, sm, CP, VM):
+  def update(self, sm, CP):
     """Gets called when new radarState is available"""
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
@@ -161,32 +148,6 @@ class Planner():
     self.v_acc_start = self.v_acc_next
     self.a_acc_start = self.a_acc_next
 
-    if self.mpc_frame % 1000 == 0:
-      self.kegman_kans = kegman_kans_conf()
-      self.mpc_frame = 0
-      
-    self.mpc_frame += 1
-
-    self.slow_on_curve = int(kegman_kans.conf['slowOnCurves'])
-
-    if self.slow_on_curve and len(sm['modelV2'].path.poly):
-      path = list(sm['modelV2'].path.poly)
-
-      # Curvature of polynomial https://en.wikipedia.org/wiki/Curvature#Curvature_of_the_graph_of_a_function
-      # y = a x^3 + b x^2 + c x + d, y' = 3 a x^2 + 2 b x + c, y'' = 6 a x + 2 b
-      # k = y'' / (1 + y'^2)^1.5
-      # TODO: compute max speed without using a list of points and without numpy
-      y_p = 3 * path[0] * self.path_x**2 + 2 * path[1] * self.path_x + path[2]
-      y_pp = 6 * path[0] * self.path_x + 2 * path[1]
-      curv = y_pp / (1. + y_p**2)**1.5
-
-      a_y_max = 2.975 - v_ego * 0.0375  # ~1.85 @ 75mph, ~2.6 @ 25mph
-      v_curvature = np.sqrt(a_y_max / np.clip(np.abs(curv), 1e-4, None))
-      model_speed = np.min(v_curvature)
-      model_speed = max(20.0 * CV.MPH_TO_MS, model_speed) # Don't slow down below 20mph
-    else:
-      model_speed = 255.0
-
     # Calculate speed for normal cruise control
     if enabled and not self.first_loop and not sm['carState'].gasPressed:
       accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego, following, self.kegman_kans.conf['accelerationMode'])]
@@ -203,14 +164,6 @@ class Planner():
                                                     accel_limits_turns[1], accel_limits_turns[0],
                                                     jerk_limits[1], jerk_limits[0],
                                                     LON_MPC_STEP)
-
-      if self.slow_on_curve:
-        self.v_model, self.a_model = speed_smoother(self.v_acc_start, self.a_acc_start,
-                                                     model_speed,
-                                                     2*accel_limits[1], accel_limits[0],
-                                                     2*jerk_limits[1], jerk_limits[0],
-                                                     LON_MPC_STEP)
-
 
       # cruise speed can't be negative even is user is distracted
       self.v_cruise = max(self.v_cruise, 0.)
@@ -256,7 +209,7 @@ class Planner():
 
     self.first_loop = False
 
-  def publish(self, sm, pm, VM):
+  def publish(self, sm, pm):
     self.mpc1.publish(pm)
     self.mpc2.publish(pm)
 
