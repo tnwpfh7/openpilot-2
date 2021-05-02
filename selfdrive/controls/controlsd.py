@@ -40,6 +40,7 @@ IGNORE_PROCESSES = set(["rtshield", "uploader", "deleter", "loggerd", "logmessag
 ThermalStatus = log.DeviceState.ThermalStatus
 State = log.ControlsState.OpenpilotState
 PandaType = log.PandaState.PandaType
+LongitudinalPlanSource = log.LongitudinalPlan.LongitudinalPlanSource
 Desire = log.LateralPlan.Desire
 LaneChangeState = log.LateralPlan.LaneChangeState
 LaneChangeDirection = log.LateralPlan.LaneChangeDirection
@@ -61,7 +62,8 @@ class Controls:
       ignore = ['driverCameraState', 'managerState'] if SIMULATION else None
       self.sm = messaging.SubMaster(['deviceState', 'pandaState', 'modelV2', 'liveCalibration',
                                      'driverMonitoringState', 'longitudinalPlan', 'lateralPlan', 'liveLocationKalman',
-                                     'roadCameraState', 'driverCameraState', 'managerState', 'liveParameters', 'radarState'], ignore_alive=ignore)
+                                     'roadCameraState', 'driverCameraState', 'managerState', 'liveParameters', 'radarState'],
+                                     ignore_alive=ignore, ignore_avg_freq=['radarState'])
 
     self.can_sock = can_sock
     if can_sock is None:
@@ -118,6 +120,7 @@ class Controls:
     elif self.CP.lateralTuning.which() == 'lqr':
       self.LaC = LatControlLQR(self.CP)
 
+    self.long_plan_source = 0
     self.state = State.disabled
     self.enabled = False
     self.active = False
@@ -567,6 +570,8 @@ class Controls:
     controlsState.ufAccelCmd = float(self.LoC.pid.f)
     controlsState.vTargetLead = float(v_acc)
     controlsState.aTarget = float(a_acc)
+    # bellow line is for Slow On Curves
+    controlsState.decelForModel = self.sm['longitudinalPlan'].longitudinalPlanSource == LongitudinalPlanSource.model
     controlsState.cumLagMs = -self.rk.remaining * 1000.
     controlsState.startMonoTime = int(start_time * 1e9)
     controlsState.forceDecel = bool(force_decel)
@@ -579,6 +584,20 @@ class Controls:
     controlsState.steerRatio = self.VM.sR
     controlsState.steerRateCost = ntune_get('steerRateCost')
     controlsState.steerActuatorDelay = ntune_get('steerActuatorDelay')
+
+    if self.sm['longitudinalPlan'].longitudinalPlanSource == LongitudinalPlanSource.cruise:
+      self.long_plan_source = 1
+    elif self.sm['longitudinalPlan'].longitudinalPlanSource == LongitudinalPlanSource.mpc1:
+      self.long_plan_source = 2
+    elif self.sm['longitudinalPlan'].longitudinalPlanSource == LongitudinalPlanSource.mpc2:
+      self.long_plan_source = 3
+    elif self.sm['longitudinalPlan'].longitudinalPlanSource == LongitudinalPlanSource.mpc3:
+      self.long_plan_source = 4
+    elif self.sm['longitudinalPlan'].longitudinalPlanSource == LongitudinalPlanSource.model:
+      self.long_plan_source = 5
+    else:
+      self.long_plan_source = 0
+    controlsState.longPlanSource = self.long_plan_source
 
     if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
       controlsState.lateralControlState.angleState = lac_log
